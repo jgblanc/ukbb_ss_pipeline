@@ -1,11 +1,21 @@
 # Pipeline to process GWAS summary statistics
+IDS, = glob_wildcards("data/raw/{id}.gwas.imputed_v3.both_sexes.tsv.bgz")
 
-#This rule is an example
-rule test:
+
+rule all:
+	input:
+		expand("data/unzipped/{id}.gwas.imputed_v3.both_sexes.tsv", id=IDS)
+
+
+#This rule unzips raw bgz files
+rule unzip_bgz:
+	input:
+		"data/raw/{id}.gwas.imputed_v3.both_sexes.tsv.bgz"
 	output:
-		"output/test.txt"
+		"data/unzipped/{id}.gwas.imputed_v3.both_sexes.tsv"
 	shell:
-		"touch output/test.txt"
+		"gunzip -c {input} > {output}"
+
 
 
 	

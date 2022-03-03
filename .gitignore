@@ -6,4 +6,4 @@
 .RData
 
 # User-specific files
-data/raw_files/*
+data/*
