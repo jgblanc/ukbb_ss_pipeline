@@ -1,0 +1,2 @@
+SyntaxError in line 24 of /Users/alexstern/ukbb_ss_pipeline/Snakefile:
+Unexpected keyword ouput in rule definition (Snakefile, line 24)
