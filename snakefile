@@ -1,7 +1,7 @@
 # Pipeline to process GWAS summary statistics
 IDS, = glob_wildcards("data/raw/{id}.gwas.imputed_v3.both_sexes.tsv.bgz")
 MAF = ["maf_0.01"]
-PVAL = ["pval_10e-2000"]
+PVAL = ["pval_5e-8"]
 
 def get_params(x):
 	out = x.split("_")[1]

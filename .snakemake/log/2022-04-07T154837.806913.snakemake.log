@@ -1,0 +1,72 @@
+Building DAG of jobs...
+The code used to generate one or several output files has changed:
+    To inspect which output files have changes, run 'snakemake --list-code-changes'.
+    To trigger a re-run, use 'snakemake -R $(snakemake --list-code-changes)'.
+The input used to generate one or several output files has changed:
+    To inspect which output files have changes, run 'snakemake --list-input-changes'.
+    To trigger a re-run, use 'snakemake -R $(snakemake --list-input-changes)'.
+The params used to generate one or several output files has changed:
+    To inspect which output files have changes, run 'snakemake --list-params-changes'.
+    To trigger a re-run, use 'snakemake -R $(snakemake --list-params-changes)'.
+Using shell: /bin/bash
+Provided cores: 1 (use --cores to define parallelism)
+Rules claiming more threads will be scaled down.
+Job stats:
+job          count    min threads    max threads
+---------  -------  -------------  -------------
+all              1              1              1
+iaf              2              1              1
+unzip_bgz        1              1              1
+total            4              1              1
+
+Select jobs to execute...
+
+[Thu Apr  7 15:48:37 2022]
+rule iaf:
+    input: data/unzipped/20002_1421.gwas.imputed_v3.both_sexes.tsv, data/fourier_ls-all_parsed.bed, data/ukbb_phenotype_names.tsv
+    output: data/iaf/maf_0.01/pval_5e-8/20002_1421.gwas.imputed_v3.both_sexes.tsv
+    jobid: 1
+    wildcards: maf=maf_0.01, pval=pval_5e-8, id=20002_1421
+    resources: tmpdir=/var/folders/zk/7cx059j91lqbwvk7qk6kky6r0000gn/T
+
+[Thu Apr  7 15:48:58 2022]
+Finished job 1.
+1 of 4 steps (25%) done
+Select jobs to execute...
+
+[Thu Apr  7 15:48:58 2022]
+rule unzip_bgz:
+    input: data/raw/20001_1003.gwas.imputed_v3.both_sexes.tsv.bgz
+    output: data/unzipped/20001_1003.gwas.imputed_v3.both_sexes.tsv
+    jobid: 4
+    wildcards: id=20001_1003
+    resources: tmpdir=/var/folders/zk/7cx059j91lqbwvk7qk6kky6r0000gn/T
+
+[Thu Apr  7 15:49:02 2022]
+Finished job 4.
+2 of 4 steps (50%) done
+Select jobs to execute...
+
+[Thu Apr  7 15:49:03 2022]
+rule iaf:
+    input: data/unzipped/20001_1003.gwas.imputed_v3.both_sexes.tsv, data/fourier_ls-all_parsed.bed, data/ukbb_phenotype_names.tsv
+    output: data/iaf/maf_0.01/pval_5e-8/20001_1003.gwas.imputed_v3.both_sexes.tsv
+    jobid: 3
+    wildcards: maf=maf_0.01, pval=pval_5e-8, id=20001_1003
+    resources: tmpdir=/var/folders/zk/7cx059j91lqbwvk7qk6kky6r0000gn/T
+
+[Thu Apr  7 15:49:21 2022]
+Finished job 3.
+3 of 4 steps (75%) done
+Select jobs to execute...
+
+[Thu Apr  7 15:49:21 2022]
+localrule all:
+    input: data/iaf/maf_0.01/pval_5e-8/20002_1421.gwas.imputed_v3.both_sexes.tsv, data/iaf/maf_0.01/pval_5e-8/20001_1003.gwas.imputed_v3.both_sexes.tsv, data/iaf/maf_0.01/pval_5e-8/50_raw.gwas.imputed_v3.both_sexes.tsv
+    jobid: 0
+    resources: tmpdir=/var/folders/zk/7cx059j91lqbwvk7qk6kky6r0000gn/T
+
+[Thu Apr  7 15:49:21 2022]
+Finished job 0.
+4 of 4 steps (100%) done
+Complete log: /Users/alexstern/ukbb_ss_pipeline/.snakemake/log/2022-04-07T154837.806913.snakemake.log

@@ -68,8 +68,9 @@ if(nrow(df_sig) == 0) {
     return(block_num)
   }
 
-
-  df_af_filter <- df_af_filter[1:2,] #Delete this line for final implementation
+  # minSNP <- nrow(df_af_filter) #Delete this for final implementation
+  
+#df_af_filter <- df_af_filter[1:min(minSNP, 100),] #Delete this line for final implementation
   # Add block info - takes a while 
   df_blocks <- df_af_filter %>% 
     mutate(block = apply(., MARGIN = 1, FUN = function(params)assign_SNP_to_block(as.numeric(params[1]), as.numeric(params[2]))))

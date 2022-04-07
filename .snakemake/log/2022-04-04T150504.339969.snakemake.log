@@ -1,0 +1,51 @@
+Building DAG of jobs...
+The code used to generate one or several output files has changed:
+    To inspect which output files have changes, run 'snakemake --list-code-changes'.
+    To trigger a re-run, use 'snakemake -R $(snakemake --list-code-changes)'.
+The input used to generate one or several output files has changed:
+    To inspect which output files have changes, run 'snakemake --list-input-changes'.
+    To trigger a re-run, use 'snakemake -R $(snakemake --list-input-changes)'.
+The params used to generate one or several output files has changed:
+    To inspect which output files have changes, run 'snakemake --list-params-changes'.
+    To trigger a re-run, use 'snakemake -R $(snakemake --list-params-changes)'.
+Using shell: /bin/bash
+Provided cores: 1 (use --cores to define parallelism)
+Rules claiming more threads will be scaled down.
+Job stats:
+job          count    min threads    max threads
+---------  -------  -------------  -------------
+all              1              1              1
+iaf              2              1              1
+unzip_bgz        1              1              1
+total            4              1              1
+
+Select jobs to execute...
+
+[Mon Apr  4 15:05:04 2022]
+rule iaf:
+    input: data/unzipped/20002_1421.gwas.imputed_v3.both_sexes.tsv, data/fourier_ls-all_parsed.bed, data/ukbb_phenotype_names.tsv
+    output: data/iaf/maf_0.01/pval_5e-8/20002_1421.gwas.imputed_v3.both_sexes.tsv
+    jobid: 1
+    wildcards: maf=maf_0.01, pval=pval_5e-8, id=20002_1421
+    resources: tmpdir=/var/folders/zk/7cx059j91lqbwvk7qk6kky6r0000gn/T
+
+[Mon Apr  4 15:05:25 2022]
+Error in rule iaf:
+    jobid: 1
+    output: data/iaf/maf_0.01/pval_5e-8/20002_1421.gwas.imputed_v3.both_sexes.tsv
+    shell:
+        Rscript code/get_iaf.R data/unzipped/20002_1421.gwas.imputed_v3.both_sexes.tsv data/fourier_ls-all_parsed.bed data/ukbb_phenotype_names.tsv 0.01 5e-8 data/iaf/maf_0.01/pval_5e-8/20002_1421.gwas.imputed_v3.both_sexes.tsv
+        (one of the commands exited with non-zero exit code; note that snakemake uses bash strict mode!)
+
+Shutting down, this might take some time.
+Exiting because a job execution failed. Look above for error message
+The code used to generate one or several output files has changed:
+    To inspect which output files have changes, run 'snakemake --list-code-changes'.
+    To trigger a re-run, use 'snakemake -R $(snakemake --list-code-changes)'.
+The input used to generate one or several output files has changed:
+    To inspect which output files have changes, run 'snakemake --list-input-changes'.
+    To trigger a re-run, use 'snakemake -R $(snakemake --list-input-changes)'.
+The params used to generate one or several output files has changed:
+    To inspect which output files have changes, run 'snakemake --list-params-changes'.
+    To trigger a re-run, use 'snakemake -R $(snakemake --list-params-changes)'.
+Complete log: /Users/alexstern/ukbb_ss_pipeline/.snakemake/log/2022-04-04T150504.339969.snakemake.log
