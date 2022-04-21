@@ -10,7 +10,7 @@ library(data.table)
 library(tidyverse)
 library(boot)
 
-ss_file=args[1]
+pheno_id <- args[1]
 blocks_file=args[2]
 code_file=args[3]
 maf_t=as.numeric(args[4])
@@ -18,8 +18,18 @@ pval_t=as.numeric(args[5])
 output_file=args[6]
 print(maf_t)
 print(pval_t)
+print(pheno_id)
+
+# Download summary stats 
+cmd <- paste0("curl -0 https://broad-ukb-sumstats-us-east-1.s3.amazonaws.com/round2/additive-tsvs/", pheno_id, ".gwas.imputed_v3.both_sexes.tsv.bgz > data/raw/", pheno_id, ".gwas.imputed_v3.both_sexes.tsv.bgz")
+system(cmd)
+
+# Unzip summary stats 
+cmd <- paste0("gunzip -c data/raw/", pheno_id, ".gwas.imputed_v3.both_sexes.tsv.bgz > data/unzipped/", pheno_id, ".gwas.imputed_v3.both_sexes.tsv")
+system(cmd)
 
 # Read in summary statistics data
+ss_file <- paste0("data/unzipped/", pheno_id, ".gwas.imputed_v3.both_sexes.tsv")
 df <- fread(ss_file)
 
 # Return the name of the phenotype
@@ -119,5 +129,14 @@ if(nrow(df_af_filter) == 0) {
     colnames(df_out) <- c("mean_iaf", "lower_ci", "upper_ci", "SNP_number", "phenotype_name")
   }
 }
+
 # Save output
 fwrite(df_out, output_file, row.names = F, col.names = T, sep = "\t")
+
+# Delete raw and zipped files 
+cmd <- paste0("rm data/raw/", pheno_id, ".gwas.imputed_v3.both_sexes.tsv.bgz")
+system(cmd)
+
+cmd <- paste0("rm data/unzipped/", pheno_id, ".gwas.imputed_v3.both_sexes.tsv")
+system(cmd)
+
