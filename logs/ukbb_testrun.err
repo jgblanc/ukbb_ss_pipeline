@@ -1,0 +1,51 @@
+Note that the current default version of R is 3.6.1.
+Building DAG of jobs...
+Using shell: /bin/bash
+Provided cores: 14
+Rules claiming more threads will be scaled down.
+Job counts:
+	count	jobs
+	1	all
+	1	iaf
+	2
+
+[Thu Apr 21 13:39:50 2022]
+rule iaf:
+    input: data/unzipped/50_raw.gwas.imputed_v3.both_sexes.tsv, data/fourier_ls-all_parsed.bed, data/ukbb_phenotype_names.tsv
+    output: data/iaf/maf_0.01/pval_5e-8/50_raw.gwas.imputed_v3.both_sexes.tsv
+    jobid: 3
+    wildcards: maf=maf_0.01, pval=pval_5e-8, id=50_raw
+
+Registered S3 methods overwritten by 'tibble':
+  method     from  
+  format.tbl pillar
+  print.tbl  pillar
+Warning: ‘timedatectl’ indicates the non-existent timezone name ‘n/a’
+Warning: Your system is mis-configured: ‘/etc/localtime’ is not a symlink
+Warning: It is strongly recommended to set envionment variable TZ to ‘America/Chicago’ (or equivalent)
+── Attaching packages ─────────────────────────────────────── tidyverse 1.3.0 ──
+✔ ggplot2 3.3.5     ✔ purrr   0.3.4
+✔ tibble  2.1.3     ✔ dplyr   1.0.6
+✔ tidyr   1.1.0     ✔ stringr 1.4.0
+✔ readr   1.3.1     ✔ forcats 0.4.0
+── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+✖ dplyr::between()   masks data.table::between()
+✖ dplyr::filter()    masks stats::filter()
+✖ dplyr::first()     masks data.table::first()
+✖ dplyr::lag()       masks stats::lag()
+✖ dplyr::last()      masks data.table::last()
+✖ purrr::transpose() masks data.table::transpose()
+There were 50 or more warnings (use warnings() to see the first 50)
+[Thu Apr 21 13:56:17 2022]
+Finished job 3.
+1 of 2 steps (50%) done
+
+[Thu Apr 21 13:56:17 2022]
+localrule all:
+    input: data/iaf/maf_0.01/pval_5e-8/F20.gwas.imputed_v3.both_sexes.tsv, data/iaf/maf_0.01/pval_5e-8/50_raw.gwas.imputed_v3.both_sexes.tsv, data/iaf/maf_0.01/pval_5e-8/20002_1421.gwas.imputed_v3.both_sexes.tsv
+    jobid: 0
+
+[Thu Apr 21 13:56:17 2022]
+Finished job 0.
+2 of 2 steps (100%) done
+Complete log: /project2/jjberg/sternam/ukbb_ss_pipeline/.snakemake/log/2022-04-21T133948.438448.snakemake.log

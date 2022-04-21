@@ -35,23 +35,24 @@ colnames(all_phenotype_codes) <- c("code", "phenotype")
 pheno_name_table <- all_phenotype_codes %>% filter(code == phenotype_code)
 phenotype_name <- as.character(pheno_name_table[1,"phenotype"])
 
-
 # Remove low confidence variants
 df_filtered <- df %>% filter(low_confidence_variant == FALSE)
 
 # Remove non-significant variants
 df_sig <- df_filtered %>% filter(pval < pval_t)
-if(nrow(df_sig) == 0) {
+
+# Separated column 1 into chromosome, base pair, reference allele, and alt. allele
+df_split <- df_sig %>% separate(variant, c("chr", "bp", "ref", "alt"), sep = ":")
+
+# Filtered out low minor allele frequency variants
+df_af_filter <- df_split %>% filter(minor_AF > maf_t) %>% filter(chr!= "X")
+
+if(nrow(df_af_filter) == 0) {
   df_out <- as.data.frame(matrix(c(NA, NA, NA, NA, NA), nrow = 1))
   colnames(df_out) <- c("mean_iaf", "lower_ci", "upper_ci", "SNP_number", "phenotype_name")
   print("No significant SNPs")
 } else { 
 
-  # Separated column 1 into chromosome, base pair, reference allele, and alt. allele
-  df_split <- df_sig %>% separate(variant, c("chr", "bp", "ref", "alt"), sep = ":")
-
-  # Filtered out low minor allele frequency variants
-  df_af_filter <- df_split %>% filter(minor_AF > maf_t)
 
   # Read in ld block information
   ld_block <- fread(blocks_file)
@@ -69,8 +70,8 @@ if(nrow(df_sig) == 0) {
   }
 
   # minSNP <- nrow(df_af_filter) #Delete this for final implementation
+  #df_af_filter <- df_af_filter[1:min(minSNP, 100),] #Delete this line for final implementation
   
-#df_af_filter <- df_af_filter[1:min(minSNP, 100),] #Delete this line for final implementation
   # Add block info - takes a while 
   df_blocks <- df_af_filter %>% 
     mutate(block = apply(., MARGIN = 1, FUN = function(params)assign_SNP_to_block(as.numeric(params[1]), as.numeric(params[2]))))

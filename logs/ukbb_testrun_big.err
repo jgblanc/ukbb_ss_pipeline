@@ -1,0 +1,446 @@
+Note that the current default version of R is 3.6.1.
+Building DAG of jobs...
+The code used to generate one or several output files has changed:
+    To inspect which output files have changes, run 'snakemake --list-code-changes'.
+    To trigger a re-run, use 'snakemake -R $(snakemake --list-code-changes)'.
+Using shell: /bin/bash
+Provided cores: 14
+Rules claiming more threads will be scaled down.
+Job stats:
+job          count    min threads    max threads
+---------  -------  -------------  -------------
+all              1              1              1
+iaf             11              1              1
+unzip_bgz       11              1              1
+total           23              1              1
+
+Select jobs to execute...
+
+[Thu Apr 21 15:59:54 2022]
+rule unzip_bgz:
+    input: data/raw/E10.gwas.imputed_v3.both_sexes.tsv.bgz
+    output: data/unzipped/E10.gwas.imputed_v3.both_sexes.tsv
+    jobid: 2
+    wildcards: id=E10
+    resources: tmpdir=/tmp/jobs/19410375
+
+
+[Thu Apr 21 15:59:54 2022]
+rule unzip_bgz:
+    input: data/raw/AD.gwas.imputed_v3.both_sexes.tsv.bgz
+    output: data/unzipped/AD.gwas.imputed_v3.both_sexes.tsv
+    jobid: 16
+    wildcards: id=AD
+    resources: tmpdir=/tmp/jobs/19410375
+
+
+[Thu Apr 21 15:59:55 2022]
+rule unzip_bgz:
+    input: data/raw/F20.gwas.imputed_v3.both_sexes.tsv.bgz
+    output: data/unzipped/F20.gwas.imputed_v3.both_sexes.tsv
+    jobid: 4
+    wildcards: id=F20
+    resources: tmpdir=/tmp/jobs/19410375
+
+
+[Thu Apr 21 15:59:56 2022]
+rule unzip_bgz:
+    input: data/raw/E11.gwas.imputed_v3.both_sexes.tsv.bgz
+    output: data/unzipped/E11.gwas.imputed_v3.both_sexes.tsv
+    jobid: 20
+    wildcards: id=E11
+    resources: tmpdir=/tmp/jobs/19410375
+
+
+[Thu Apr 21 15:59:57 2022]
+rule unzip_bgz:
+    input: data/raw/E66.gwas.imputed_v3.both_sexes.tsv.bgz
+    output: data/unzipped/E66.gwas.imputed_v3.both_sexes.tsv
+    jobid: 6
+    wildcards: id=E66
+    resources: tmpdir=/tmp/jobs/19410375
+
+
+[Thu Apr 21 15:59:58 2022]
+rule unzip_bgz:
+    input: data/raw/G6_SLEEPAPNO.gwas.imputed_v3.both_sexes.tsv.bgz
+    output: data/unzipped/G6_SLEEPAPNO.gwas.imputed_v3.both_sexes.tsv
+    jobid: 8
+    wildcards: id=G6_SLEEPAPNO
+    resources: tmpdir=/tmp/jobs/19410375
+
+
+[Thu Apr 21 15:59:58 2022]
+rule unzip_bgz:
+    input: data/raw/D05.gwas.imputed_v3.both_sexes.tsv.bgz
+    output: data/unzipped/D05.gwas.imputed_v3.both_sexes.tsv
+    jobid: 22
+    wildcards: id=D05
+    resources: tmpdir=/tmp/jobs/19410375
+
+
+[Thu Apr 21 15:59:58 2022]
+rule unzip_bgz:
+    input: data/raw/6159_8.gwas.imputed_v3.both_sexes.tsv.bgz
+    output: data/unzipped/6159_8.gwas.imputed_v3.both_sexes.tsv
+    jobid: 10
+    wildcards: id=6159_8
+    resources: tmpdir=/tmp/jobs/19410375
+
+
+[Thu Apr 21 15:59:58 2022]
+rule unzip_bgz:
+    input: data/raw/J45.gwas.imputed_v3.both_sexes.tsv.bgz
+    output: data/unzipped/J45.gwas.imputed_v3.both_sexes.tsv
+    jobid: 24
+    wildcards: id=J45
+    resources: tmpdir=/tmp/jobs/19410375
+
+
+[Thu Apr 21 15:59:58 2022]
+rule unzip_bgz:
+    input: data/raw/20126_4.gwas.imputed_v3.both_sexes.tsv.bgz
+    output: data/unzipped/20126_4.gwas.imputed_v3.both_sexes.tsv
+    jobid: 12
+    wildcards: id=20126_4
+    resources: tmpdir=/tmp/jobs/19410375
+
+
+[Thu Apr 21 15:59:58 2022]
+rule unzip_bgz:
+    input: data/raw/ASTHMA_CHILD.gwas.imputed_v3.both_sexes.tsv.bgz
+    output: data/unzipped/ASTHMA_CHILD.gwas.imputed_v3.both_sexes.tsv
+    jobid: 14
+    wildcards: id=ASTHMA_CHILD
+    resources: tmpdir=/tmp/jobs/19410375
+
+[Thu Apr 21 16:00:14 2022]
+Finished job 2.
+1 of 23 steps (4%) done
+Select jobs to execute...
+
+[Thu Apr 21 16:00:14 2022]
+rule iaf:
+    input: data/unzipped/E10.gwas.imputed_v3.both_sexes.tsv, data/fourier_ls-all_parsed.bed, data/ukbb_phenotype_names.tsv
+    output: data/iaf/maf_0.01/pval_5e-8/E10.gwas.imputed_v3.both_sexes.tsv
+    jobid: 1
+    wildcards: maf=maf_0.01, pval=pval_5e-8, id=E10
+    resources: tmpdir=/tmp/jobs/19410375
+
+[Thu Apr 21 16:00:15 2022]
+Finished job 16.
+2 of 23 steps (9%) done
+Select jobs to execute...
+
+[Thu Apr 21 16:00:15 2022]
+rule iaf:
+    input: data/unzipped/AD.gwas.imputed_v3.both_sexes.tsv, data/fourier_ls-all_parsed.bed, data/ukbb_phenotype_names.tsv
+    output: data/iaf/maf_0.01/pval_5e-8/AD.gwas.imputed_v3.both_sexes.tsv
+    jobid: 15
+    wildcards: maf=maf_0.01, pval=pval_5e-8, id=AD
+    resources: tmpdir=/tmp/jobs/19410375
+
+[Thu Apr 21 16:00:15 2022]
+Finished job 4.
+3 of 23 steps (13%) done
+Select jobs to execute...
+
+[Thu Apr 21 16:00:15 2022]
+rule iaf:
+    input: data/unzipped/F20.gwas.imputed_v3.both_sexes.tsv, data/fourier_ls-all_parsed.bed, data/ukbb_phenotype_names.tsv
+    output: data/iaf/maf_0.01/pval_5e-8/F20.gwas.imputed_v3.both_sexes.tsv
+    jobid: 3
+    wildcards: maf=maf_0.01, pval=pval_5e-8, id=F20
+    resources: tmpdir=/tmp/jobs/19410375
+
+[Thu Apr 21 16:00:17 2022]
+Finished job 6.
+4 of 23 steps (17%) done
+Select jobs to execute...
+
+[Thu Apr 21 16:00:17 2022]
+rule iaf:
+    input: data/unzipped/E66.gwas.imputed_v3.both_sexes.tsv, data/fourier_ls-all_parsed.bed, data/ukbb_phenotype_names.tsv
+    output: data/iaf/maf_0.01/pval_5e-8/E66.gwas.imputed_v3.both_sexes.tsv
+    jobid: 5
+    wildcards: maf=maf_0.01, pval=pval_5e-8, id=E66
+    resources: tmpdir=/tmp/jobs/19410375
+
+[Thu Apr 21 16:00:17 2022]
+Finished job 20.
+5 of 23 steps (22%) done
+Select jobs to execute...
+
+[Thu Apr 21 16:00:17 2022]
+rule iaf:
+    input: data/unzipped/E11.gwas.imputed_v3.both_sexes.tsv, data/fourier_ls-all_parsed.bed, data/ukbb_phenotype_names.tsv
+    output: data/iaf/maf_0.01/pval_5e-8/E11.gwas.imputed_v3.both_sexes.tsv
+    jobid: 19
+    wildcards: maf=maf_0.01, pval=pval_5e-8, id=E11
+    resources: tmpdir=/tmp/jobs/19410375
+
+[Thu Apr 21 16:00:18 2022]
+Finished job 22.
+6 of 23 steps (26%) done
+Select jobs to execute...
+
+[Thu Apr 21 16:00:18 2022]
+rule iaf:
+    input: data/unzipped/D05.gwas.imputed_v3.both_sexes.tsv, data/fourier_ls-all_parsed.bed, data/ukbb_phenotype_names.tsv
+    output: data/iaf/maf_0.01/pval_5e-8/D05.gwas.imputed_v3.both_sexes.tsv
+    jobid: 21
+    wildcards: maf=maf_0.01, pval=pval_5e-8, id=D05
+    resources: tmpdir=/tmp/jobs/19410375
+
+[Thu Apr 21 16:00:18 2022]
+Finished job 8.
+7 of 23 steps (30%) done
+[Thu Apr 21 16:00:18 2022]
+Finished job 24.
+8 of 23 steps (35%) done
+Select jobs to execute...
+
+[Thu Apr 21 16:00:18 2022]
+rule iaf:
+    input: data/unzipped/G6_SLEEPAPNO.gwas.imputed_v3.both_sexes.tsv, data/fourier_ls-all_parsed.bed, data/ukbb_phenotype_names.tsv
+    output: data/iaf/maf_0.01/pval_5e-8/G6_SLEEPAPNO.gwas.imputed_v3.both_sexes.tsv
+    jobid: 7
+    wildcards: maf=maf_0.01, pval=pval_5e-8, id=G6_SLEEPAPNO
+    resources: tmpdir=/tmp/jobs/19410375
+
+
+[Thu Apr 21 16:00:18 2022]
+rule iaf:
+    input: data/unzipped/J45.gwas.imputed_v3.both_sexes.tsv, data/fourier_ls-all_parsed.bed, data/ukbb_phenotype_names.tsv
+    output: data/iaf/maf_0.01/pval_5e-8/J45.gwas.imputed_v3.both_sexes.tsv
+    jobid: 23
+    wildcards: maf=maf_0.01, pval=pval_5e-8, id=J45
+    resources: tmpdir=/tmp/jobs/19410375
+
+[Thu Apr 21 16:00:18 2022]
+Finished job 14.
+9 of 23 steps (39%) done
+[Thu Apr 21 16:00:19 2022]
+Finished job 12.
+10 of 23 steps (43%) done
+[Thu Apr 21 16:00:19 2022]
+Finished job 10.
+11 of 23 steps (48%) done
+Select jobs to execute...
+
+[Thu Apr 21 16:00:19 2022]
+rule iaf:
+    input: data/unzipped/20126_4.gwas.imputed_v3.both_sexes.tsv, data/fourier_ls-all_parsed.bed, data/ukbb_phenotype_names.tsv
+    output: data/iaf/maf_0.01/pval_5e-8/20126_4.gwas.imputed_v3.both_sexes.tsv
+    jobid: 11
+    wildcards: maf=maf_0.01, pval=pval_5e-8, id=20126_4
+    resources: tmpdir=/tmp/jobs/19410375
+
+
+[Thu Apr 21 16:00:19 2022]
+rule iaf:
+    input: data/unzipped/ASTHMA_CHILD.gwas.imputed_v3.both_sexes.tsv, data/fourier_ls-all_parsed.bed, data/ukbb_phenotype_names.tsv
+    output: data/iaf/maf_0.01/pval_5e-8/ASTHMA_CHILD.gwas.imputed_v3.both_sexes.tsv
+    jobid: 13
+    wildcards: maf=maf_0.01, pval=pval_5e-8, id=ASTHMA_CHILD
+    resources: tmpdir=/tmp/jobs/19410375
+
+
+[Thu Apr 21 16:00:19 2022]
+rule iaf:
+    input: data/unzipped/6159_8.gwas.imputed_v3.both_sexes.tsv, data/fourier_ls-all_parsed.bed, data/ukbb_phenotype_names.tsv
+    output: data/iaf/maf_0.01/pval_5e-8/6159_8.gwas.imputed_v3.both_sexes.tsv
+    jobid: 9
+    wildcards: maf=maf_0.01, pval=pval_5e-8, id=6159_8
+    resources: tmpdir=/tmp/jobs/19410375
+
+── Attaching packages ─────────────────────────────────────── tidyverse 1.3.0 ──
+── Attaching packages ─────────────────────────────────────── tidyverse 1.3.0 ──
+── Attaching packages ─────────────────────────────────────── tidyverse 1.3.0 ──
+── Attaching packages ─────────────────────────────────────── tidyverse 1.3.0 ──
+── Attaching packages ─────────────────────────────────────── tidyverse 1.3.0 ──
+── Attaching packages ─────────────────────────────────────── tidyverse 1.3.0 ──
+── Attaching packages ─────────────────────────────────────── tidyverse 1.3.0 ──
+── Attaching packages ─────────────────────────────────────── tidyverse 1.3.0 ──
+── Attaching packages ─────────────────────────────────────── tidyverse 1.3.0 ──
+── Attaching packages ─────────────────────────────────────── tidyverse 1.3.0 ──
+── Attaching packages ─────────────────────────────────────── tidyverse 1.3.0 ──
+✔ ggplot2 3.3.5     ✔ purrr   0.3.4
+✔ tibble  3.1.6     ✔ dplyr   1.0.8
+✔ tidyr   1.1.0     ✔ stringr 1.4.0
+✔ readr   1.3.1     ✔ forcats 0.4.0
+✔ ggplot2 3.3.5     ✔ purrr   0.3.4
+✔ tibble  3.1.6     ✔ dplyr   1.0.8
+✔ tidyr   1.1.0     ✔ stringr 1.4.0
+✔ readr   1.3.1     ✔ forcats 0.4.0
+✔ ggplot2 3.3.5     ✔ purrr   0.3.4
+✔ tibble  3.1.6     ✔ dplyr   1.0.8
+✔ tidyr   1.1.0     ✔ stringr 1.4.0
+✔ readr   1.3.1     ✔ forcats 0.4.0
+✔ ggplot2 3.3.5     ✔ purrr   0.3.4
+✔ tibble  3.1.6     ✔ dplyr   1.0.8
+✔ tidyr   1.1.0     ✔ stringr 1.4.0
+✔ readr   1.3.1     ✔ forcats 0.4.0
+✔ ggplot2 3.3.5     ✔ purrr   0.3.4
+✔ tibble  3.1.6     ✔ dplyr   1.0.8
+✔ tidyr   1.1.0     ✔ stringr 1.4.0
+✔ readr   1.3.1     ✔ forcats 0.4.0
+✔ ggplot2 3.3.5     ✔ purrr   0.3.4
+✔ tibble  3.1.6     ✔ dplyr   1.0.8
+✔ tidyr   1.1.0     ✔ stringr 1.4.0
+✔ readr   1.3.1     ✔ forcats 0.4.0
+✔ ggplot2 3.3.5     ✔ purrr   0.3.4
+✔ tibble  3.1.6     ✔ dplyr   1.0.8
+✔ tidyr   1.1.0     ✔ stringr 1.4.0
+✔ readr   1.3.1     ✔ forcats 0.4.0
+✔ ggplot2 3.3.5     ✔ purrr   0.3.4
+✔ tibble  3.1.6     ✔ dplyr   1.0.8
+✔ tidyr   1.1.0     ✔ stringr 1.4.0
+✔ readr   1.3.1     ✔ forcats 0.4.0
+✔ ggplot2 3.3.5     ✔ purrr   0.3.4
+✔ tibble  3.1.6     ✔ dplyr   1.0.8
+✔ tidyr   1.1.0     ✔ stringr 1.4.0
+✔ readr   1.3.1     ✔ forcats 0.4.0
+✔ ggplot2 3.3.5     ✔ purrr   0.3.4
+✔ tibble  3.1.6     ✔ dplyr   1.0.8
+✔ tidyr   1.1.0     ✔ stringr 1.4.0
+✔ readr   1.3.1     ✔ forcats 0.4.0
+✔ ggplot2 3.3.5     ✔ purrr   0.3.4
+✔ tibble  3.1.6     ✔ dplyr   1.0.8
+✔ tidyr   1.1.0     ✔ stringr 1.4.0
+✔ readr   1.3.1     ✔ forcats 0.4.0
+── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+✖ dplyr::between()   masks data.table::between()
+✖ dplyr::filter()    masks stats::filter()
+✖ dplyr::first()     masks data.table::first()
+✖ dplyr::lag()       masks stats::lag()
+✖ dplyr::last()      masks data.table::last()
+✖ purrr::transpose() masks data.table::transpose()
+── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+✖ dplyr::between()   masks data.table::between()
+✖ dplyr::filter()    masks stats::filter()
+✖ dplyr::first()     masks data.table::first()
+✖ dplyr::lag()       masks stats::lag()
+✖ dplyr::last()      masks data.table::last()
+✖ purrr::transpose() masks data.table::transpose()
+── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+✖ dplyr::between()   masks data.table::between()
+✖ dplyr::filter()    masks stats::filter()
+✖ dplyr::first()     masks data.table::first()
+✖ dplyr::lag()       masks stats::lag()
+✖ dplyr::last()      masks data.table::last()
+✖ purrr::transpose() masks data.table::transpose()
+── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+✖ dplyr::between()   masks data.table::between()
+✖ dplyr::filter()    masks stats::filter()
+✖ dplyr::first()     masks data.table::first()
+✖ dplyr::lag()       masks stats::lag()
+✖ dplyr::last()      masks data.table::last()
+✖ purrr::transpose() masks data.table::transpose()
+── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+✖ dplyr::between()   masks data.table::between()
+✖ dplyr::filter()    masks stats::filter()
+✖ dplyr::first()     masks data.table::first()
+✖ dplyr::lag()       masks stats::lag()
+✖ dplyr::last()      masks data.table::last()
+✖ purrr::transpose() masks data.table::transpose()
+── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+✖ dplyr::between()   masks data.table::between()
+✖ dplyr::filter()    masks stats::filter()
+✖ dplyr::first()     masks data.table::first()
+✖ dplyr::lag()       masks stats::lag()
+✖ dplyr::last()      masks data.table::last()
+✖ purrr::transpose() masks data.table::transpose()
+── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+✖ dplyr::between()   masks data.table::between()
+✖ dplyr::filter()    masks stats::filter()
+✖ dplyr::first()     masks data.table::first()
+✖ dplyr::lag()       masks stats::lag()
+✖ dplyr::last()      masks data.table::last()
+✖ purrr::transpose() masks data.table::transpose()
+── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+✖ dplyr::between()   masks data.table::between()
+✖ dplyr::filter()    masks stats::filter()
+✖ dplyr::first()     masks data.table::first()
+✖ dplyr::lag()       masks stats::lag()
+✖ dplyr::last()      masks data.table::last()
+✖ purrr::transpose() masks data.table::transpose()
+── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+✖ dplyr::between()   masks data.table::between()
+✖ dplyr::filter()    masks stats::filter()
+✖ dplyr::first()     masks data.table::first()
+✖ dplyr::lag()       masks stats::lag()
+✖ dplyr::last()      masks data.table::last()
+✖ purrr::transpose() masks data.table::transpose()
+── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+✖ dplyr::between()   masks data.table::between()
+✖ dplyr::filter()    masks stats::filter()
+✖ dplyr::first()     masks data.table::first()
+✖ dplyr::lag()       masks stats::lag()
+✖ dplyr::last()      masks data.table::last()
+✖ purrr::transpose() masks data.table::transpose()
+── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+✖ dplyr::between()   masks data.table::between()
+✖ dplyr::filter()    masks stats::filter()
+✖ dplyr::first()     masks data.table::first()
+✖ dplyr::lag()       masks stats::lag()
+✖ dplyr::last()      masks data.table::last()
+✖ purrr::transpose() masks data.table::transpose()
+Error in boot(df_inc_freq$inc_AF, boot_mean, R = 5000) : 
+  no data in call to 'boot'
+Execution halted
+[Thu Apr 21 16:01:10 2022]
+Error in rule iaf:
+    jobid: 7
+    output: data/iaf/maf_0.01/pval_5e-8/G6_SLEEPAPNO.gwas.imputed_v3.both_sexes.tsv
+    shell:
+        Rscript code/get_iaf.R data/unzipped/G6_SLEEPAPNO.gwas.imputed_v3.both_sexes.tsv data/fourier_ls-all_parsed.bed data/ukbb_phenotype_names.tsv 0.01 5e-8 data/iaf/maf_0.01/pval_5e-8/G6_SLEEPAPNO.gwas.imputed_v3.both_sexes.tsv
+        (one of the commands exited with non-zero exit code; note that snakemake uses bash strict mode!)
+
+[Thu Apr 21 16:01:10 2022]
+Finished job 3.
+12 of 23 steps (52%) done
+Warning message:
+Problem while computing `block = apply(...)`.
+ℹ NAs introduced by coercion 
+[Thu Apr 21 16:01:11 2022]
+Finished job 15.
+13 of 23 steps (57%) done
+[Thu Apr 21 16:01:11 2022]
+Finished job 19.
+14 of 23 steps (61%) done
+[Thu Apr 21 16:01:12 2022]
+Finished job 21.
+15 of 23 steps (65%) done
+Error in boot(df_inc_freq$inc_AF, boot_mean, R = 5000) : 
+  no data in call to 'boot'
+Execution halted
+[Thu Apr 21 16:01:13 2022]
+Finished job 5.
+16 of 23 steps (70%) done
+[Thu Apr 21 16:01:13 2022]
+Error in rule iaf:
+    jobid: 11
+    output: data/iaf/maf_0.01/pval_5e-8/20126_4.gwas.imputed_v3.both_sexes.tsv
+    shell:
+        Rscript code/get_iaf.R data/unzipped/20126_4.gwas.imputed_v3.both_sexes.tsv data/fourier_ls-all_parsed.bed data/ukbb_phenotype_names.tsv 0.01 5e-8 data/iaf/maf_0.01/pval_5e-8/20126_4.gwas.imputed_v3.both_sexes.tsv
+        (one of the commands exited with non-zero exit code; note that snakemake uses bash strict mode!)
+
+[Thu Apr 21 16:01:19 2022]
+Finished job 9.
+17 of 23 steps (74%) done
+[Thu Apr 21 16:01:47 2022]
+Finished job 23.
+18 of 23 steps (78%) done
+[Thu Apr 21 16:01:57 2022]
+Finished job 13.
+19 of 23 steps (83%) done
+[Thu Apr 21 16:04:38 2022]
+Finished job 1.
+20 of 23 steps (87%) done
+Shutting down, this might take some time.
+Exiting because a job execution failed. Look above for error message
+The code used to generate one or several output files has changed:
+    To inspect which output files have changes, run 'snakemake --list-code-changes'.
+    To trigger a re-run, use 'snakemake -R $(snakemake --list-code-changes)'.
+Complete log: .snakemake/log/2022-04-21T155951.022057.snakemake.log
