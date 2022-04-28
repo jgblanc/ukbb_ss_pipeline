@@ -1,0 +1,21 @@
+filename	maf	pval	mean_iaf	lower_ci	upper_ci	SNP_number	phenotype_name
+100920_2109.gwas.imputed_v3.both_sexes.tsv	maf_0.01	pval_5e-8					
+1488_irnt.gwas.imputed_v3.both_sexes.tsv	maf_0.01	pval_5e-8	0.535616920833333	0.445397618703955	0.624824602697061	24	Tea intake
+20002_1572.gwas.imputed_v3.both_sexes.tsv	maf_0.01	pval_5e-8					
+20002_1598.gwas.imputed_v3.both_sexes.tsv	maf_0.01	pval_5e-8	0.9024798	0.9024798	0.9024798	1	Non-cancer illness code, self-reported: tonsiltis
+20003_1140868170.gwas.imputed_v3.both_sexes.tsv	maf_0.01	pval_5e-8					
+20003_1140879634.gwas.imputed_v3.both_sexes.tsv	maf_0.01	pval_5e-8	0.0315403	0.0315403	0.0315403	1	Treatment/medication code: trazodone
+2139_raw.gwas.imputed_v3.both_sexes.tsv	maf_0.01	pval_5e-8	0.48022915	0.44116671603274	0.520360051561574	130	Age first had sexual intercourse
+22126.gwas.imputed_v3.both_sexes.tsv	maf_0.01	pval_5e-8	0.556816628	0.463670620819132	0.652981305110717	25	Doctor diagnosed hayfever or allergic rhinitis
+22601_61113073.gwas.imputed_v3.both_sexes.tsv	maf_0.01	pval_5e-8					
+22617_2112.gwas.imputed_v3.both_sexes.tsv	maf_0.01	pval_5e-8					
+2405.gwas.imputed_v3.both_sexes.tsv	maf_0.01	pval_5e-8	0.484148333333333	0.275140666666667	0.589331666666667	3	Number of children fathered
+3486.gwas.imputed_v3.both_sexes.tsv	maf_0.01	pval_5e-8	0.0737872	0.0737872	0.0737872	1	Ever tried to stop smoking
+5114_raw.gwas.imputed_v3.both_sexes.tsv	maf_0.01	pval_5e-8	0.9523756	0.9523756	0.9523756	1	6mm cylindrical power angle (right)
+84_raw.gwas.imputed_v3.both_sexes.tsv	maf_0.01	pval_5e-8					
+H66.gwas.imputed_v3.both_sexes.tsv	maf_0.01	pval_5e-8					
+H7_EPIPHORA.gwas.imputed_v3.both_sexes.tsv	maf_0.01	pval_5e-8					
+K86.gwas.imputed_v3.both_sexes.tsv	maf_0.01	pval_5e-8					
+M13_MUSCLE.gwas.imputed_v3.both_sexes.tsv	maf_0.01	pval_5e-8					
+M46.gwas.imputed_v3.both_sexes.tsv	maf_0.01	pval_5e-8	0.144663	0.144663	0.144663	1	Diagnoses - main ICD10: M46 Other inflammatory spondylopathies
+OTHER_SYSTCON_FG.gwas.imputed_v3.both_sexes.tsv	maf_0.01	pval_5e-8					

@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=ukbb_testrun_big
-#SBATCH --output=logs/ukbb_testrun_big.out
-#SBATCH --error=logs/ukbb_testrun_big.err
+#SBATCH --output=logs/ukbb_small1.out
+#SBATCH --error=logs/ukbb_small1.err
 #SBATCH --time=04:00:00
 #SBATCH --partition=broadwl
 #SBATCH --nodes=4

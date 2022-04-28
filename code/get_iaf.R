@@ -21,7 +21,7 @@ print(pval_t)
 print(pheno_id)
 
 # Download summary stats 
-cmd <- paste0("curl -0 https://broad-ukb-sumstats-us-east-1.s3.amazonaws.com/round2/additive-tsvs/", pheno_id, ".gwas.imputed_v3.both_sexes.tsv.bgz > data/raw/", pheno_id, ".gwas.imputed_v3.both_sexes.tsv.bgz")
+cmd <- paste0("wget https://broad-ukb-sumstats-us-east-1.s3.amazonaws.com/round2/additive-tsvs/", pheno_id, ".gwas.imputed_v3.both_sexes.tsv.bgz -O data/raw/", pheno_id, ".gwas.imputed_v3.both_sexes.tsv.bgz")
 system(cmd)
 
 # Unzip summary stats 
