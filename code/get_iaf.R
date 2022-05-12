@@ -32,6 +32,56 @@ system(cmd)
 ss_file <- paste0("data/unzipped/", pheno_id, ".gwas.imputed_v3.both_sexes.tsv")
 df <- fread(ss_file)
 
+# Check if its a "varorder" file
+if (nrow(df) == 0) {
+   print("Varorder")
+   
+   # Download summary stats
+    cmd <- paste0("wget https://broad-ukb-sumstats-us-east-1.s3.amazonaws.com/round2/additive-tsvs/", pheno_id, ".gwas.imputed_v3.both_sexes.varorder.tsv.bgz -O data/raw/", pheno_id, ".gwas.imputed_v3.both_sexes.tsv.bgz")
+    system(cmd)
+
+    # Unzip summary stats
+    cmd <- paste0("gunzip -c data/raw/", pheno_id, ".gwas.imputed_v3.both_sexes.tsv.bgz > data/unzipped/", pheno_id, ".gwas.imputed_v3.both_sexes.tsv")
+    system(cmd)
+
+    # Read in summary statistics data
+    ss_file <- paste0("data/unzipped/", pheno_id, ".gwas.imputed_v3.both_sexes.tsv")
+    df <- fread(ss_file)
+}    
+if (nrow(df) == 0) {
+    print("Female")
+
+    # Download summary stats
+    cmd <- paste0("wget https://broad-ukb-sumstats-us-east-1.s3.amazonaws.com/round2/additive-tsvs/", pheno_id, ".gwas.imputed_v3.female.tsv.bgz -O data/raw/", pheno_id, ".gwas.imputed_v3.both_sexes.tsv.bgz")
+    system(cmd)
+
+    # Unzip summary stats
+    cmd <- paste0("gunzip -c data/raw/", pheno_id, ".gwas.imputed_v3.both_sexes.tsv.bgz > data/unzipped/", pheno_id, ".gwas.imputed_v3.both_sexes.tsv")
+    system(cmd)
+
+    # Read in summary statistics data
+    ss_file <- paste0("data/unzipped/", pheno_id, ".gwas.imputed_v3.both_sexes.tsv")
+    df <- fread(ss_file)
+}
+if (nrow(df) == 0) {
+   print("Male")
+
+   # Download summary stats
+    cmd <- paste0("wget https://broad-ukb-sumstats-us-east-1.s3.amazonaws.com/round2/additive-tsvs/", pheno_id, ".gwas.imputed_v3.male.tsv.bgz -O data/raw/", pheno_id, ".gwas.imputed_v3.both_sexes.tsv.bgz")
+    system(cmd)
+
+    # Unzip summary stats
+    cmd <- paste0("gunzip -c data/raw/", pheno_id, ".gwas.imputed_v3.both_sexes.tsv.bgz > data/unzipped/", pheno_id, ".gwas.imputed_v3.both_sexes.tsv")
+    system(cmd)
+
+    # Read in summary statistics data
+    ss_file <- paste0("data/unzipped/", pheno_id, ".gwas.imputed_v3.both_sexes.tsv")
+    df <- fread(ss_file)
+
+}
+
+
+
 # Return the name of the phenotype
 file_split <- str_split(ss_file, "\\.")
 name_split <- str_split(file_split[[1]][1], "/")

@@ -4,7 +4,7 @@ library(data.table)
 
 maf <- c("maf_0.01")
 pval <- c("pval_5e-8")
-names_raw <- list.files("../output/file_names/small/")
+names_raw <- list.files("../output/file_names/all/")
 names <- rep(NA, length(names_raw))
 for (i in 1:length(names_raw)) {
   names[i] <- tools::file_path_sans_ext(names_raw[i])
@@ -20,4 +20,4 @@ agg_all_data <- function(dir_path, maf, pval, filename) {
 }
 df <- plyr::mdply(dat, agg_all_data, dir_path = '../data/iaf' )
 
-fwrite(df, "../output/results/small_run.txt", row.names=F,quote=F,sep="\t", col.names = T)
+fwrite(df, "../output/results/all_5e-8_0.01.txt", row.names=F,quote=F,sep="\t", col.names = T)

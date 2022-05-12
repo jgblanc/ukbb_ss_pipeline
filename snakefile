@@ -1,11 +1,12 @@
 # Pipeline to process GWAS summary statistics
-IDS, = glob_wildcards("output/file_names/small/{id}.gwas.imputed_v3.both_sexes.tsv.bgz")
+IDS, = glob_wildcards("output/file_names/all/{id}.gwas.imputed_v3.both_sexes.tsv.bgz")
 MAF = ["maf_0.01"]
 PVAL = ["pval_5e-8"]
 
 def get_params(x):
 	out = x.split("_")[1]
 	return out
+
 
 rule all:
 	input:
