@@ -1,0 +1,121 @@
+---
+title: "Plot Results"
+author: "Alex Stern"
+date: '2022-04-28'
+output:
+  pdf_document: default
+  html_document: default
+---
+# Increasing Allele Frequency for Various Traits
+This code builds off of a previous pipeline which takes GWAS data and returns the average increasing allele frequency (with confidence intervals) for various phenotypes. Using these output files, this code creates a bar graph that compares the mean increasing allele frequency for a select few of these traits. A p-value threshold of 1e-5 is used throughout this report to create a cutoff for which SNP's are considered significant. <br>
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = "~/ukbb_ss_pipeline/")
+library(data.table)
+library(tidyverse)
+library(knitr)
+```
+
+We ran the pipeline on our larger data set from all of the UK Biobank data. Traits with no significant SNPs and therefore no data for mean increasing allele frequency were removed from the data set. We then plotted the number of significant SNPs associated with each trait on a logarithmic scale. As shown in the graph, most traits only had one significant SNP, meaning the increasing allele frequency data was not very informative due to the small sample size. <br>  
+
+```{r,message=FALSE, fig.align='center'}
+df_all <- fread("output/results/all_1e-5_0.01.txt.gz")
+df_all <- drop_na(df_all, SNP_number)
+df_all <- distinct(df_all, phenotype_name, .keep_all= TRUE)
+
+ggplot(data = df_all, mapping = aes(x = log(SNP_number))) + geom_histogram()
+```
+We then filtered out all traits with less than 10 significant SNPs. The SNP numbers were again plotted in a histogram, not on a logarithmic scale this time. <br>  
+
+```{r,message=FALSE, fig.align='center'}
+df_10 <- filter(df_all, SNP_number >= 10)
+ggplot(data = df_10, mapping = aes(x = SNP_number)) + geom_histogram()
+```
+
+To get an idea of the distribution of mean increasing allele frequencies, we plotted each traits mean_iaf in a histogram. As the plot shows, most traits have an average increasing allele frequency of 0.5. <br>
+```{r,message=FALSE, fig.align='center'}
+ggplot(data = df_10, mapping = aes(x = mean_iaf)) + geom_histogram()
+```
+We calculated the average of the mean iaf's for all of the traits with more than 10 SNP's. 
+```{r}
+mean_of_mean_iaf <- mean(df_10[,mean_iaf])
+mean_of_mean_iaf
+```
+The average is below 0.5, suggesting mutational bias towards increasing alleles.
+
+We then filtered our data into two groups. The first group was of traits with a mean increasing allele frequency statistically significantly higher than 0.5. The second was of traits significantly lower than 0.5. Traits whose confidence intervals included 0.5 we removed entirely.
+```{r}
+df_sig_dif <- filter(df_10, lower_ci > 0.5 | 0.5 > upper_ci)
+df_greater_0.5 <- filter(df_sig_dif, lower_ci > 0.5)
+df_less_0.5 <- filter(df_sig_dif, 0.5 > upper_ci)
+```
+
+
+```{r}
+
+num_traits <- nrow(df_10)
+traits_greater <- nrow(df_greater_0.5)
+percent_greater <- traits_greater/num_traits
+traits_less <- nrow(df_less_0.5)
+percent_less <- traits_less/num_traits
+```
+
+```{r}
+cat("There were ", traits_greater, " traits with mean iaf significantly higher than 0.5.
+This is ", 100*round(percent_greater, 4), "% of traits with 10 or more significant SNPs.")
+```
+
+```{r}
+cat("There were ", traits_less, " traits with mean iaf significantly lower than 0.5.
+This is ", 100*round(percent_less, 4), "% of traits with 10 or more significant SNPs.")
+```
+
+```{r}
+plot_data <- function(dat, title) {
+  pl <- ggplot(data = dat, mapping = aes(x = reorder(phenotype_name, -mean_iaf), y = mean_iaf)) + geom_col(fill = "lightblue1") + theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 3)) + geom_errorbar(aes(y = mean_iaf, ymax = upper_ci, ymin = lower_ci)) + geom_point(aes(y = mean_iaf)) + geom_hline(yintercept = 0.5, alpha = 0.5, linetype = "dashed", color = "red") + ggtitle(title) + xlab("Phenotype") + ylab("Mean Increasing Allele Frequency") + theme(plot.title    = element_text(family = "mono", size = 10),
+        axis.title.x  = element_text(family = "mono"),
+        axis.title.y  = element_text(family = "mono"),
+        axis.text.x   = element_blank(),
+        axis.ticks.x = element_blank(),
+        axis.text.y   = element_text(family = "mono"),
+  panel.background = element_rect(fill = "white",
+                                colour = "white",
+                                size = 0.5, linetype = "solid"),
+  panel.grid.major = element_line(size = 0.25, linetype = 'solid',
+                                colour = "grey"), 
+  panel.grid.minor = element_line(size = 0.25, linetype = 'solid',
+                                colour = "grey"))
+  return(pl)
+}
+```
+We then plotted the mean increasing allele frequency with error for all of the traits with mean iaf significantly greater than 0.5.
+```{r, fig.align='center'}
+plot_data(df_greater_0.5, "Mean Increasing Allele frequency for traits with mean_iaf > 0.5")
+```
+The following table contains the phenotype names for all of the traits included in the above graph. They are sorted in the order they appear from left to right.
+```{r}
+greater_table <- select(df_greater_0.5, c("mean_iaf", "SNP_number", "phenotype_name")) %>% arrange(desc(mean_iaf))
+kable(greater_table)
+```
+
+
+
+
+Finally, we plotted the mean increasing allele frequency for traits with mean iaf significantly less than 0.5.
+
+
+
+```{r, fig.align='center'}
+plot_data(df_less_0.5, "Mean Increasing Allele frequency for traits with mean_iaf < 0.5")
+```
+A table containing the data represented in the bar graph is included below. Due the large number of traits with significant SNP's, only the 200 traits with the highest and lowest mean iaf values are displayed.
+```{r}
+less_table <- select(df_less_0.5, c("mean_iaf", "SNP_number", "phenotype_name")) %>% arrange(desc(mean_iaf))
+kable(head(less_table, 100))
+```
+```{r}
+kable(tail(less_table, 100))
+```
+
+Use of the p-value of 1e-5 to filter out significant SNPs vastly alters the results from the 5e-8 analysis. The average mean_iaf is significantly less than 0.5 compared to the previous data. Further investigation is needed to determine why this occurs.
