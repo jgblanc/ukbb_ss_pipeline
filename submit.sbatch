@@ -1,8 +1,8 @@
 #!/bin/bash
-#SBATCH --job-name=ukbb_all_len
-#SBATCH --output=logs/ukbb_all_len.out
-#SBATCH --error=logs/ukbb_all_len.err
-#SBATCH --time=04:00:00
+#SBATCH --job-name=ukbb_all_weighted
+#SBATCH --output=logs/ukbb_all_weighted.out
+#SBATCH --error=logs/ukbb_all_weighted.err
+#SBATCH --time=12:00:00
 #SBATCH --partition=build
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=14
