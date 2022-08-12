@@ -1,7 +1,7 @@
 #!/bin/bash
-#SBATCH --job-name=ukbb_all_weighted
-#SBATCH --output=logs/ukbb_all_weighted.out
-#SBATCH --error=logs/ukbb_all_weighted.err
+#SBATCH --job-name=ukbb_all_weighted_strict
+#SBATCH --output=logs/ukbb_all_weighted_strict.out
+#SBATCH --error=logs/ukbb_all_weighted_strict.err
 #SBATCH --time=12:00:00
 #SBATCH --partition=build
 #SBATCH --nodes=1
