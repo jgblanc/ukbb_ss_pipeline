@@ -1,0 +1,644 @@
+---
+title: "Likelihood_Models"
+author: "Jennifer Blanc"
+date: "2022-11-16"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(reshape2)
+```
+
+## Simple likelihood model using genome-wide significant hits 
+
+### Power Only
+
+```{r}
+### Calculate Non-centrality parameter 
+calc_NCP <- function(p, Nd, Nc, B, prev) {
+  
+  # Nd = number of cases
+  # Nc = number of controls 
+  # B = absolute value of liability scale effect size
+  # prev = prevalence 
+  # p = risk increasing allele freq 
+  
+  # Compute threshold 
+  t <- qnorm(1 - prev)
+  
+  # Compute mean liability 
+  mu_1 <- B * (1 -p)
+  mu_2 <- -B * p
+  sigma_2 <- 1 - (B^2 * p *(1 -p))
+  
+  # Conditional Probabilities 
+  p_case_a1 <- 1 - pnorm(t, mean = mu_1, sd = sqrt(sigma_2))
+  p_case_a2 <- 1 - pnorm(t, mean = mu_2, sd = sqrt(sigma_2))
+  p_control_a1 <- pnorm(t, mean = mu_1, sd = sqrt(sigma_2))
+  p_control_a2 <- pnorm(t, mean = mu_2, sd = sqrt(sigma_2))
+  
+  # Compute allele frequency conditional on status
+  p_d1 <- (p_case_a1 * p) / (1 - pnorm(t, mean = 0, sd = 1))
+  p_c1 <- (p_control_a1 * p) / pnorm(t, mean = 0, sd = 1)
+  
+  # Observed counts
+  q1_o <- 2 * Nd * p_d1
+  q2_o <- 2 * Nc * p_c1
+  q3_o <- 2 * Nd * (1 - p_d1)
+  q4_o <- 2 * Nc * (1 - p_c1)
+  
+  # Expected counts
+  q1_e <- ((2 * (Nd*p_d1 + Nc*p_c1)) * (2*Nd)) / (2* (Nd + Nc))
+  q2_e <- ((2 * (Nd*p_d1 + Nc*p_c1)) * (2*Nc)) / (2* (Nd + Nc))
+  q3_e <- ((2 * (Nd*(1-p_d1) + Nc*(1- p_c1))) * (2*Nd)) / (2* (Nd + Nc))
+  q4_e <- ((2 * (Nd*(1-p_d1) + Nc*(1- p_c1))) * (2*Nc)) / (2* (Nd + Nc))
+  
+  # Compute NCP 
+  NCP <- ((q1_o - q1_e)^2 / q1_e) + ((q2_o - q2_e)^2 / q2_e) + ((q3_o - q3_e)^2 / q3_e) + ((q4_o - q4_e)^2 / q4_e)
+  
+  # Return NCP
+  return(NCP)
+}
+
+## Test - power should be higher at p=0.1 vs p=0.9
+calc_NCP(p = 0.1, 500, 9500, B=0.1, prev = 0.05)
+calc_NCP(p = 0.9, 500, 9500, B=0.1, prev = 0.05)
+
+
+## Test - power should be  lower at prev close to 0.5 (R * (1 - R)) in denominator
+calc_NCP(p = 0.1, 500, 9500, B=0.1, prev = 0.05)
+calc_NCP(p = 0.1, 500, 9500, B=0.1, prev = 0.45)
+```
+
+```{r}
+### Function to calculate power 
+calc_power <- function(p, n_cases, n_controls, B, alpha, prev) {
+  
+  # p = risk increasing allele frequency
+  # n_cases = number of cases 
+  # n_controls = number of controls 
+  # B = absolute value of liability scale effect size 
+  # alpha = type 1 error (5e-8 for GWAS)
+  # prev = prevalence 
+  
+  # Calculate ncp 
+  ncp <- calc_NCP(p=p, Nd=n_cases, Nc=n_controls, B=B, prev=prev)
+  
+  # Calculate power 
+  power <- 1- pchisq(qchisq(1- alpha, df =1),df=1, ncp = ncp)
+  
+  return(power)
+}
+
+## Test - power should be higher at p=0.1 vs p=0.9
+calc_power(p = 0.1, n_cases=500, n_controls=9500, B=0.2, alpha=5e-8,prev = 0.05)
+calc_power(p = 0.9, n_cases=500, n_controls=9500, B=0.2,alpha=5e-8, prev = 0.05)
+
+## Test - power should be  lower at prev close to 0.5 (R * (1 - R)) in denominator
+calc_power(p = 0.1, n_cases=500, n_controls=9500, B=0.2, alpha=5e-8,prev = 0.05)
+calc_power(p = 0.1, n_cases=500, n_controls=9500, B=0.2,alpha=5e-8, prev = 0.45)
+```
+```{r}
+## Wrapper to match notes
+## P(D = 1 | b, p, B, theta, R)
+
+prob_discovery <- function(x, sign, n_cases, n_controls, B, alpha, prev) {
+  
+  # x = minor allele frequency
+  # sign = sign of liability scale effect size
+  # B = absolute value of liability scale effect size
+  # alpha =  type 1 error (5e-8 for GWAS)
+  # n_cases = number of cases 
+  # n_controls = number of controls 
+  # prev = prevalence 
+  
+  # If flip to appropriate increasing allele frequency for given sign 
+  if (sign == 1) {
+    p <- x
+  } else if (sign == -1)  {
+    p <- 1 - x 
+  } else {
+    stop("Please enter a valid sign")
+  }
+
+  # Calculate ncp 
+  ncp <- calc_NCP(p=p, Nd=n_cases, Nc=n_controls, B=B, prev=prev)
+  
+  # Calculate power 
+  power <- 1- pchisq(qchisq(1- alpha, df =1),df=1, ncp = ncp)
+  
+  return(power)
+  
+}
+
+## Test - prob of discover should be higher for increasing alleles
+prob_discovery(x = 0.1, sign = 1, n_cases=500, n_controls=9500, B=0.2, alpha=5e-8,prev = 0.05)
+prob_discovery(x = 0.1, sign = -1, n_cases=500, n_controls=9500, B=0.2, alpha=5e-8,prev = 0.05)
+
+## Test - prob of discover should be lower at prev close to 0.5 (R * (1 - R)) in denominator for a given sign 
+prob_discovery(x = 0.1, sign = 1, n_cases=500, n_controls=9500, B=0.2, alpha=5e-8,prev = 0.05) 
+prob_discovery(x = 0.1, sign = 1, n_cases=500, n_controls=9500, B=0.2, alpha=5e-8,prev = 0.45)
+
+## Plots
+cols <- c("red", "blue")
+freq <- seq(0.01,0.5, 0.01)
+prev <- c(0.05, 0.45)
+
+# Positive
+res1 <- mapply(prob_discovery, list(freq), sign= 1, n_cases=500, n_controls=9500, B=0.2, alpha=5e-8,prev = prev)
+matplot(freq, res1, type = "l", lwd = 2,col = cols, lty =1, xlab = "Frequency", ylab = "Power")
+legend("topleft", legend=prev, col = cols, lwd = 2, title = "Prevalence")
+
+# Negative 
+res2 <- mapply(prob_discovery, list(freq), sign= -1, n_cases=500, n_controls=9500, B=0.2, alpha=5e-8,prev = prev)
+matplot(freq, res2, type = "l", lwd = 2,col = cols, lty =1, xlab = "Frequency", ylab = "Power")
+legend("topleft", legend=prev, col = cols, lwd = 2, title = "Prevalence")
+
+# Power differential 
+res <- res1 - res2
+matplot(freq, res, type = "l", lwd = 2,col = cols, lty =1, xlab = "Frequency", ylab = "Power Differential")
+legend("topleft", legend=prev, col = cols, lwd = 2, title = "Prevalence")
+```
+
+
+```{r}
+## Function to calculate the likelihood of observing a sign at a given site 
+## Eq 24 
+
+likelihood_sign <- function(x, sign, n_cases, n_controls, B, alpha, prev) {
+
+  # x = minor allele frequency
+  # sign = sign of liability scale effect size
+  # B = absolute value of liability scale effect size
+  # alpha =  type 1 error (5e-8 for GWAS)
+  # n_cases = number of cases 
+  # n_controls = number of controls 
+  # prev = prevalence   
+  
+  numerator <- prob_discovery(x=x, sign=sign,n_cases=n_cases, n_controls = n_controls, B=B, alpha = alpha, prev = prev)
+  
+  denominator <- (0.5 * prob_discovery(x=x, sign=-1,n_cases=n_cases, n_controls = n_controls, B=B, alpha = alpha, prev = prev)) + (0.5 * prob_discovery(x=x, sign=1,n_cases=n_cases, n_controls = n_controls, B=B, alpha = alpha, prev = prev))
+  
+  lik <- 0.5 * (numerator/denominator) 
+  
+  return(lik)
+}
+
+## Test - likelihood should be higher for increasing alleles
+likelihood_sign(x = 0.1, sign = 1, n_cases=500, n_controls=9500, B=0.2, alpha=5e-8,prev = 0.05)
+likelihood_sign(x = 0.1, sign = -1, n_cases=500, n_controls=9500, B=0.2, alpha=5e-8,prev = 0.05)
+
+## Test - likelihood should be lower at prev close to 0.5 (R * (1 - R)) in denominator for a given sign 
+likelihood_sign(x = 0.1, sign = 1, n_cases=500, n_controls=9500, B=0.2, alpha=5e-8,prev = 0.05) 
+likelihood_sign(x = 0.1, sign = 1, n_cases=500, n_controls=9500, B=0.2, alpha=5e-8,prev = 0.45)
+
+likelihood_sign(x = 0.1, sign = -1, n_cases=500, n_controls=9500, B=0.2, alpha=5e-8,prev = 0.05) 
+likelihood_sign(x = 0.1, sign = -1, n_cases=500, n_controls=9500, B=0.2, alpha=5e-8,prev = 0.45)
+
+## Plots
+cols <- c("red", "blue")
+freq <- seq(0.01,0.5, 0.01)
+prev <- c(0.05, 0.45)
+
+# Positive
+res1 <- mapply(likelihood_sign, list(freq), sign= 1, n_cases=500, n_controls=9500, B=0.2, alpha=5e-8,prev = prev)
+matplot(freq, res1, type = "l", lwd = 2,col = cols, lty =1, xlab = "Frequency", ylab = "Likelihood")
+legend("topleft", legend=prev, col = cols, lwd = 2, title = "Prevalence")
+
+# Negative 
+res2 <- mapply(likelihood_sign, list(freq), sign= -1, n_cases=500, n_controls=9500, B=0.2, alpha=5e-8,prev = prev)
+matplot(freq, res2, type = "l", lwd = 2,col = cols, lty =1, xlab = "Frequency", ylab = "Likelihood")
+legend("topleft", legend=prev, col = cols, lwd = 2, title = "Prevalence")
+
+# Power differential 
+res <- res1 - res2
+matplot(freq, res, type = "l", lwd = 2,col = cols, lty =1, xlab = "Frequency", ylab = "Likelihood Differential")
+legend("topleft", legend=prev, col = cols, lwd = 2, title = "Prevalence")
+```
+
+**Simulate Data**  
+```{r}
+sim_data <- function(L, x, B, n_cases, n_controls, alpha, prev) {
+  
+  # L = number of sites
+  # x = minor allele frequency
+  # B = absolute value of liability scale effect size
+  # n_cases = number of cases 
+  # n_controls = number of controls
+  # alpha =  type 1 error (5e-8 for GWAS)
+  # prev = prevalence
+  
+  
+  # Make all alleles the same frequency
+  obv_x <- rep(0.1, L)
+  
+  
+  prob_sign <- rep(0,L)
+  for (l in 1:L) {
+    prob_sign[l] <- likelihood_sign(x = obv_x[l], sign = 1, n_cases = n_cases, n_controls = n_controls, B=B,alpha = alpha, prev=prev)
+  }
+  
+  # Draw the sign based on the probability above
+  vec_obs_b <- rbinom(L, 1, prob_sign)
+  vec_obs_b<- (vec_obs_b - 0.5) * 2
+  
+  return(vec_obs_b)
+}
+
+## Test - we should have more positive signs when prev=0.05
+obs_0.05 <- sim_data(L=1000, x=0.1, n_cases=500, n_controls = 9500, B=0.2, alpha = 5e-8, prev = 0.05)
+obs_0.45 <- sim_data(L=1000, x=0.1, n_cases=500, n_controls = 9500, B=0.2, alpha = 5e-8, prev = 0.45)
+
+table(obs_0.05)
+table(obs_0.45)
+```
+
+**Compute Likelihood of Data** 
+```{r}
+compute_prev_lik <- function(L, x, vec_obs_b, n_cases, n_controls, B, alpha, prev) {
+  
+  # L = number of sites
+  # x = minor allele frequency
+  
+  # n_cases = number of cases 
+  # n_controls = number of controls
+  # B = absolute value of liability scale effect size
+  # alpha =  type 1 error (5e-8 for GWAS)
+  # prev = prevalence
+  
+  vec_like <- rep(0, L)
+  for(l in 1:L) {
+    vec_like[l] <- likelihood_sign(x=x, sign = vec_obs_b[l], n_cases = n_cases, n_controls = n_controls, B=B, alpha =alpha, prev = prev)
+  }
+
+  final_lik <- sum(log(vec_like))
+  return(final_lik)
+}  
+
+## Test for prev=0.05 the likelihood should be higher prev=0.05
+compute_prev_lik(L=1000, x=0.1, obs_0.05, n_cases = 500, n_controls = 9500, B=0.2, alpha = 5e-8, prev = 0.05)
+compute_prev_lik(L=1000, x=0.1, obs_0.05, n_cases = 500, n_controls = 9500, B=0.2, alpha = 5e-8, prev = 0.45)
+
+## Test for prev=0.45 the likelihood should be higher prev=0.45
+compute_prev_lik(L=1000, x=0.1, obs_0.45, n_cases = 500, n_controls = 9500, B=0.2, alpha = 5e-8, prev = 0.05)
+compute_prev_lik(L=1000, x=0.1, obs_0.45, n_cases = 500, n_controls = 9500, B=0.2, alpha = 5e-8, prev = 0.45)
+```
+
+**Compute MLE** 
+```{r}
+grid_search <- function(L, x, vec_obs_b, n_cases, n_controls, B, alpha, grid_vec) {
+  
+  # L = number of sites
+  # x = minor allele frequency
+  
+  # n_cases = number of cases 
+  # n_controls = number of controls
+  # B = absolute value of liability scale effect size
+  # alpha =  type 1 error (5e-8 for GWAS)
+  # gid_prev = vector of possible prevalences
+  
+  # Loop through possible prevalences, computing likelihood for each
+  collect_liks <- rep(0, length(grid_vec))
+  for (i in 1:length(grid_vec)) {
+    collect_liks[i] <- compute_prev_lik(L=L, x  = x, vec_obs_b, n_cases = n_cases, n_controls = n_controls, B=B,alpha = alpha, prev=grid_vec[i])
+  }
+  # Return vector of likelihoods
+  return(collect_liks)
+}
+
+grid_vec <- seq(0.01, 0.99, 0.01)
+lik_0.05 <- grid_search(L=1000, x=0.1, obs_0.05, n_cases = 500, n_controls = 9500, B=0.2, alpha = 5e-8, grid_vec = grid_vec)
+plot(grid_vec,lik_0.05)
+abline(v = 0.05, col = "darkgreen")
+abline(v = grid_vec[which.max(lik_0.05)], col = "red")
+
+grid_vec <- seq(0.01, 0.99, 0.01)
+lik_0.45 <- grid_search(L=1000, x=0.1, obs_0.45, n_cases = 500, n_controls = 9500, B=0.2, alpha = 5e-8, grid_vec = grid_vec)
+plot(grid_vec,lik_0.45)
+abline(v = 0.45, col = "darkgreen")
+abline(v = grid_vec[which.max(lik_0.45)], col = "red")
+```
+
+**Evolution Asymmetry**
+```{r}
+## Proportional probability of observing an increasing allele at frequency p, given a selection coefficient
+p_x <- function(p, gamma) {
+  
+  # p = increasing allele frequency
+  # gamma = population scale selection coefficient
+  
+  num <- exp(-gamma*p)
+  denom <- p*(1-p)
+  return(num/denom)
+}
+# Test - p_x should be shifted to lower frequencies with stronger selection
+ps <- seq(0, 1, 0.01)
+plot(ps, p_x(ps, 1))
+plot(ps, p_x(ps, 20))
+
+
+## 
+```
+```{r}
+# Function to calculate the probability that the minor allele is trait increasing, given its frequency and the selection coefficient
+prob_sign_evo <- function(x, gamma) {
+  
+  # x = minor allele frequency
+  # gamma = population scale selection coefficient
+  
+  result <- 1 / (1 + exp(gamma * (2*x - 1)))
+  return(result)
+}
+
+xs <- seq(0, 0.5, 0.01)
+plot(xs, prob_sign_evo(xs, 40))
+plot(xs, prob_sign_evo(xs, 1))
+```
+```{r}
+sim_data_evo <- function(L, vec_x, gamma) {
+  
+  # L = number of sites
+  # x = minor allele frequency
+  # gamma = population scale selection coefficient
+  
+  prob_sign <- rep(0,L)
+  for (i in 1:L) {
+    prob_sign[i] <- prob_sign_evo(vec_x[i], gamma)
+  }
+  
+  # Draw the sign based on the probability above
+  vec_obs_b <- rbinom(L, 1, prob_sign)
+  vec_obs_b <- (vec_obs_b - 0.5) * 2
+  
+  return(vec_obs_b)
+}
+
+obs_sign_1 <- sim_data_evo(L=1000, vec_x=runif(1000, 0, 0.5), gamma=1)
+obs_sign_40 <- sim_data_evo(L=1000, vec_x=runif(1000, 0, 0.5), gamma=40)
+table(obs_sign_1)
+table(obs_sign_40)
+
+```
+
+```{r}
+compute_lik_evo <- function(L, vec_obs_x, gamma, vec_obs_b) {
+  
+  # L = number of sites
+  # x = minor allele frequency
+  
+  
+  vec_like <- rep(0, L)
+  for(i in 1:L) {
+    if (vec_obs_b[i] == 1) {
+        vec_like[i] <- prob_sign_evo(x=vec_obs_x[i], gamma=gamma) 
+    } else if (vec_obs_b[i] == -1){
+      vec_like[i] <- 1- prob_sign_evo(x=vec_obs_x[i], gamma=gamma) 
+    } else {
+      stop("Please enter a valid sign")
+    }
+  }
+
+  final_lik <- sum(log(vec_like))
+  return(final_lik)
+} 
+
+lik_evo_1 <- compute_lik_evo(1000, rep(0.1, 1000), 1, obs_sign_1)
+lik_evo_40 <- compute_lik_evo(1000, rep(0.1, 1000), 40, obs_sign_1)
+```
+
+```{r}
+## Work for today, December 1st
+grid_search_evo <- function(L, vec_obs_x, vec_obs_b, grid_search) {
+  # Loop through possible gammas, computing likelihood for each
+  collect_liks <- rep(0, length(grid_search))
+  for (i in 1:length(grid_search)) {
+    collect_liks[i] <- compute_lik_evo(L=L,  vec_obs_x = vec_obs_x , gamma=grid_search[i], vec_obs_b = vec_obs_b)
+  }
+  # Return vector of likelihoods
+  return(collect_liks)
+}
+
+vec_obs_x <- runif(1000, 0, 0.5)
+
+grid_search_obs1 <- seq(0, 5, 0.05)
+obs_sign_1 <- sim_data_evo(L=1000, vec_obs_x, gamma=1)
+lik_1 <- grid_search_evo(1000, vec_obs_x, obs_sign_1, grid_search_obs1)
+plot(grid_search_obs1,lik_1)
+abline(v = 1, col = "darkgreen")
+abline(v = grid_search_obs1[which.max(lik_1)], col = "red")
+
+grid_search_obs5 <- seq(0, 10, 0.05)
+obs_sign_5 <- sim_data_evo(L=1000, vec_obs_x, gamma=5)
+lik_5 <- grid_search_evo(1000, vec_obs_x, obs_sign_5, grid_search_obs5)
+plot(grid_search_obs5,lik_5)
+abline(v = 5, col = "darkgreen")
+abline(v = grid_search_obs5[which.max(lik_5)], col = "red")
+
+grid_search_obs40 <- seq(0, 60, 1)
+obs_sign_40 <- sim_data_evo(L=1000, vec_obs_x, gamma=40)
+lik_40 <- grid_search_evo(1000, vec_obs_x, obs_sign_40, grid_search_obs40)
+plot(grid_search_obs40,lik_40)
+abline(v = 40, col = "darkgreen")
+abline(v = grid_search_obs40[which.max(lik_40)], col = "red")
+```
+## Both Power and Evolutionary Asymmetry
+```{r}
+## Function to calculate the likelihood of observing a sign at a given site 
+## Eq 23
+
+prob_discovery <- function(x, sign, n_cases, n_controls, B, alpha, prev) {
+  
+  # x = minor allele frequency
+  # sign = sign of liability scale effect size
+  # B = absolute value of liability scale effect size
+  # alpha =  type 1 error (5e-8 for GWAS)
+  # n_cases = number of cases 
+  # n_controls = number of controls 
+  # prev = prevalence 
+  
+  # If flip to appropriate increasing allele frequency for given sign 
+  if (sign == 1) {
+    p <- x
+  } else if (sign == -1)  {
+    p <- 1 - x 
+  } else {
+    stop("Please enter a valid sign")
+  }
+
+  # Calculate ncp 
+  ncp <- calc_NCP(p=p, Nd=n_cases, Nc=n_controls, B=B, prev=prev)
+  
+  # Calculate power 
+  power <- 1- pchisq(qchisq(1- alpha, df =1),df=1, ncp = ncp)
+  
+  return(power)
+  
+}
+
+sim_data <- function(L, vec_x, B, n_cases, n_controls, alpha, prev, gamma) {
+  
+  # L = number of sites
+  # x = minor allele frequency
+  # B = absolute value of liability scale effect size
+  # n_cases = number of cases 
+  # n_controls = number of controls
+  # alpha = type 1 error (5e-8 for GWAS)
+  # prev = prevalence
+  
+  prob_sign <- rep(0,L)
+  for (i in 1:L) {
+    
+    P1 <- prob_sign_evo(vec_x[i], gamma) * prob_discovery(x=vec_x[i], sign=1,n_cases=n_cases, n_controls = n_controls, B=B, alpha = alpha, prev = prev)
+    P2  <- (1 - prob_sign_evo(vec_x[i], gamma)) * prob_discovery(x=vec_x[i], sign=-1,n_cases=n_cases, n_controls = n_controls, B=B, alpha = alpha, prev = prev)
+    
+    prob_sign[i] <- P1/(P1 + P2)
+    
+  }
+  
+  # Draw the sign based on the probability above
+  vec_obs_b <- rbinom(L, 1, prob_sign)
+  vec_obs_b<- (vec_obs_b - 0.5) * 2
+  
+  return(vec_obs_b)
+}
+
+obs_x <- rep(0.1, 1000)
+obs_sign <- sim_data(L = 1000, vec_x = obs_x, n_cases = 500, n_controls = 4500, B=0.2, alpha = 5e-8, prev=0.05, gamma=5)
+table(obs_sign)
+```
+
+
+```{r}
+compute_joint_likelihood <- function(vec_x, obs_sign, B, n_cases, n_controls, alpha, prev, gamma) {
+  
+  # vec_x = vector of minor allele frequencies
+  # obs_sign = observed sign
+  
+  # n_cases = number of cases 
+  # n_controls = number of controls
+  # B = absolute value of liability scale effect size
+  # alpha =  type 1 error (5e-8 for GWAS)
+  # prev = prevalence
+  # gamma = population scaled selection coefficient
+  
+  L <- length(vec_x)
+  vec_like <- rep(0, L)
+  for(i in 1:L) {
+    
+    P1 <- prob_sign_evo(vec_x[i], gamma) * prob_discovery(x=vec_x[i], sign=1,n_cases=n_cases, n_controls = n_controls, B=B, alpha = alpha, prev = prev)
+    P2  <- (1 - prob_sign_evo(vec_x[i], gamma)) * prob_discovery(x=vec_x[i], sign=-1,n_cases=n_cases, n_controls = n_controls, B=B, alpha = alpha, prev = prev)
+   
+    if (obs_sign[i] == 1) {
+      vec_like[i] <- P1 / (P1 + P2)
+    } else if (obs_sign[i] == -1) {
+      vec_like[i] <- P2 / (P1 + P2)
+    } else {
+      stop("Enter valid signs")
+    }
+  }
+
+  final_lik <- sum(log(vec_like))
+  return(final_lik)
+  
+}
+
+obs_x <- rep(0.1, 1000)
+obs_sign <- sim_data(L = 1000, vec_x = obs_x, n_cases = 500, n_controls = 4500, B=0.2, alpha = 5e-8, prev=0.05, gamma=5)
+compute_joint_likelihood(vec_x = obs_x, obs_sign = obs_sign,n_cases = 500, n_controls = 4500, B=0.2, alpha = 5e-8, prev=0.05, gamma=5 )
+
+```
+
+
+```{r}
+prevs <- c(0.01, 0.05, 0.25, 0.5)
+gammas <- c(0, 0.5, 1, 1.5, 2)
+grid_search <- seq(0, 2.5, 0.05)
+
+all_data <- list()
+all_lik <- list()
+L <- 1000
+N <- 10000
+
+for (g in 1:length(gammas)) {
+  
+  print(paste0("The gamma index is ",g))
+  data_mat <- array(0, c(length(prevs), L, 30)) ## <--
+  like_mat <- array(0, c(length(prevs), 30)) ## <--
+  
+  for (k in 1:length(prevs)) {
+    
+    print(paste0("The prevalence index is ", k))
+    
+    for (j in 1:30) {
+      obs_x <- runif(L, min = 0, max = 0.5)
+      data_mat[k, ,j] <- sim_data(L = L, vec_x = obs_x, n_cases = prevs[k]*N, n_controls = (1 -prevs[k]) *N, B=0.2, alpha = 5e-8, prev=prevs[k], gamma=gammas[g])  ## <--
+      temp <- rep(0,length(grid_search))
+      for (i in 1:length(grid_search)){
+        temp[i] <- compute_joint_likelihood(vec_x = obs_x, obs_sign = data_mat[k, ,j],n_cases = prevs[k]*N, n_controls = (1 -prevs[k]) *N, B=0.2, alpha = 5e-8, prev=prevs[k], gamma=grid_search[i]) ## <--
+      }
+      mle <- grid_search[which.max(temp)]
+      like_mat[k,j] <- mle
+      #print(mle)
+    }
+  }
+  ##------------------------------------------------
+  all_data[[g]] <- data_mat
+  all_lik[[g]] <- like_mat
+}
+
+```
+
+```{r}
+extract_df <- function(all_lik, i) {
+  df <- as.data.frame(t(all_lik[[i]]))
+  colnames(df) <- paste0("Prevalence-", prevs)
+  df$true_gamma <- paste0("TrueGamma-", gammas[i])
+  df$t.g <- gammas[i]
+  return(df)
+}
+
+df <- extract_df(all_lik, 1)
+for (i in 2:length(gammas)) {
+  tmp <- extract_df(all_lik, i)
+  df <- rbind(df, tmp)
+}
+```
+
+```{r}
+df_plot <- melt(df, id.vars = c("true_gamma", "t.g"))
+df_plot <- df_plot %>% group_by(t.g, variable) %>% summarize(average = mean(value), s.d=sd(value)/sqrt(n()), lowerci = average - (1.96  * s.d), upperci = average + (1.96 * s.d))
+
+pl <- ggplot(df_plot, aes(x = t.g, y = average)) + geom_point() + facet_wrap(~variable, ncol=1) + geom_errorbar(aes(ymin = lowerci, ymax = upperci), width=0.1) + xlab("True Gamma") + ylab("Mean MLE") + geom_abline(a=1, b=0, color="red", linetype="dashed")
+pl
+ggsave("~/Desktop/lik.png", pl)
+```
+
+
+
+
+
+
+
+```{r}
+par(mfrow= c(3,5))
+plot(grid_search,all_lik[[1]][1,] )
+plot(grid_search,all_lik[[1]][2,] )
+plot(grid_search,all_lik[[1]][3,] )
+plot(grid_search,all_lik[[1]][4,] )
+#plot(grid_search,all_lik[[1]][5,] )
+
+plot(grid_search,all_lik[[2]][1,] )
+plot(grid_search,all_lik[[2]][2,] )
+plot(grid_search,all_lik[[2]][3,] )
+plot(grid_search,all_lik[[2]][4,] )
+#plot(grid_search,all_lik[[2]][5,] )
+
+plot(grid_search,all_lik[[3]][1,] )
+plot(grid_search,all_lik[[3]][2,] )
+plot(grid_search,all_lik[[3]][3,] )
+plot(grid_search,all_lik[[3]][4,] )
+#plot(grid_search,all_lik[[3]][5,] )
+
+```

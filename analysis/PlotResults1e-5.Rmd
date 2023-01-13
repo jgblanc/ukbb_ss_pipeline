@@ -20,7 +20,7 @@ library(knitr)
 We ran the pipeline on our larger data set from all of the UK Biobank data. Traits with no significant SNPs and therefore no data for mean increasing allele frequency were removed from the data set. We then plotted the number of significant SNPs associated with each trait on a logarithmic scale. As shown in the graph, most traits only had one significant SNP, meaning the increasing allele frequency data was not very informative due to the small sample size. <br>  
 
 ```{r,message=FALSE, fig.align='center'}
-df_all <- fread("output/results/all_1e-5_0.01.txt.gz")
+df_all <- fread("../output/results/all_1e-5_0.01.txt.gz")
 df_all <- drop_na(df_all, SNP_number)
 df_all <- distinct(df_all, phenotype_name, .keep_all= TRUE)
 

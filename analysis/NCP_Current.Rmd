@@ -1,0 +1,141 @@
+---
+title: "NCP_Current"
+author: "Alex Stern"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+### Calculate Non-centrality parameter 
+calc_NCP <- function(p, Nd, Nc, B, prev) {
+  
+  # Nd = number of cases
+  # Nc = number of controls 
+  # B = liability scale effect size
+  # prev = prevalence 
+  # p = risk increasing allele freq 
+  
+  # Compute threshold 
+  t <- qnorm(1 - prev)
+  
+  # Compute mean liability 
+  mu_1 <- B * (1 - p)
+  mu_2 <- -B * p
+  sigma_2 <- 1 - (B^2 * p *(1 - p))
+  
+  # Conditional Probabilities 
+  p_case_a1 <- 1 - pnorm(t, mean = mu_1, sd = sqrt(sigma_2))
+  p_case_a2 <- 1 - pnorm(t, mean = mu_2, sd = sqrt(sigma_2))
+  p_control_a1 <- pnorm(t, mean = mu_1, sd = sqrt(sigma_2))
+  p_control_a2 <- pnorm(t, mean = mu_2, sd = sqrt(sigma_2))
+  
+  # Compute allele frequency conditional on status
+  p_d1 <- (p_case_a1 * p) / (1 - pnorm(t, mean = 0, sd = 1))
+  p_c1 <- (p_control_a1 * p) / pnorm(t, mean = 0, sd = 1)
+  
+  # Observed counts
+  q1_o <- 2 * Nd * p_d1
+  q2_o <- 2 * Nc * p_c1
+  q3_o <- 2 * Nd * (1 - p_d1)
+  q4_o <- 2 * Nc * (1 - p_c1)
+  
+  # Expected counts
+  q1_e <- ((2 * (Nd*p_d1 + Nc*p_c1)) * (2*Nd)) / (2* (Nd + Nc))
+  q2_e <- ((2 * (Nd*p_d1 + Nc*p_c1)) * (2*Nc)) / (2* (Nd + Nc))
+  q3_e <- ((2 * (Nd*(1-p_d1) + Nc*(1- p_c1))) * (2*Nd)) / (2* (Nd + Nc))
+  q4_e <- ((2 * (Nd*(1-p_d1) + Nc*(1- p_c1))) * (2*Nc)) / (2* (Nd + Nc))
+  
+  # Compute NCP 
+  NCP <- ((q1_o - q1_e)^2 / q1_e) + ((q2_o - q2_e)^2 / q2_e) + ((q3_o - q3_e)^2 / q3_e) + ((q4_o - q4_e)^2 / q4_e)
+  
+  # Return NCP
+  return(NCP)
+}
+
+
+### Function to calculate power 
+
+calc_power <- function(p, n_cases, n_controls, B, alpha, prev) {
+  
+## Test - power should be higher at p=0.1 vs p=0.9
+calc_NCP(p = 0.1, 500, 9500, B=0.1, prev = 0.05)
+calc_NCP(p = 0.9, 500, 9500, B=0.1, prev = 0.05)
+
+## Test - power should be  lower at prev close to 0.5 (R * (1 - R)) in denominator
+calc_NCP(p = 0.1, 500, 9500, B=0.1, prev = 0.05)
+calc_NCP(p = 0.1, 500, 9500, B=0.1, prev = 0.45)  
+  
+  
+  # alpha = type 1 error (5e-8 for GWAS)
+  
+  # Calculate ncp 
+  ncp <- calc_NCP(p=p, Nd=n_cases, Nc=n_controls, B=B, prev=prev)
+  
+  # Calculate power 
+  power <- 1- pchisq(qchisq(1- alpha, df =1),df=1, ncp = ncp)
+  
+  return(power)
+}
+## Test - power should be higher at p=0.1 vs p=0.9
+calc_power(p = 0.1, n_cases=500, n_controls=9500, B=0.2, alpha=5e-8,prev = 0.05)
+calc_power(p = 0.9, n_cases=500, n_controls=9500, B=0.2,alpha=5e-8, prev = 0.05)
+
+## Test - power should be  lower at prev close to 0.5 (R * (1 - R)) in denominator
+calc_power(p = 0.1, n_cases=500, n_controls=9500, B=0.2, alpha=5e-8,prev = 0.05)
+calc_power(p = 0.1, n_cases=500, n_controls=9500, B=0.2,alpha=5e-8, prev = 0.45)
+
+## Wrapper to match notes 
+
+p_b <- function(x, sign, n_cases, n_controls, B, alpha, prev) {
+  
+  # alpha = type 1 error (5e-8 for GWAS)
+  if (sign == 1) {
+    p <- x
+  } else if (sign == -1)  {
+    p <- 1 - x 
+  } else {
+    stop("Please enter a valid sign")
+  }
+  # Calculate ncp 
+  ncp <- calc_NCP(p=p, Nd=n_cases, Nc=n_controls, B=B, prev=prev)
+  
+  # Calculate power 
+  power <- 1- pchisq(qchisq(1- alpha, df =1),df=1, ncp = ncp)
+  
+  return(power)
+  
+}
+p_b(x = 0.1, sign = 1, n_cases = 500, n_controls = 10000, B=0.1,alpha = 5e-8, prev=0.05)
+p_b(x = 0.1, sign = -1, n_cases = 500, n_controls = 10000, B=0.1,alpha = 5e-8, prev=0.05)
+
+likelihood_sign <- function(x, sign, n_cases, n_controls, B, alpha, prev) {
+  numerator <- p_b(x, sign, n_cases, n_controls, B, alpha, prev)
+  denominator <- (0.5 * p_b(x, sign=-1, n_cases, n_controls, B, alpha, prev)) + (0.5 * p_b(x, sign=1, n_cases, n_controls, B, alpha, prev))
+  result <- numerator/(2*denominator)
+  return(result)
+}
+```
+```{r}
+res1 <- mapply(prob_discovery, list(freq), sign= 1, n_cases=500, n_controls=9500, B=0.2, alpha=5e-8,prev = prev)
+matplot(freq, res1, type = "l", lwd = 2,col = cols, lty =1, xlab = "Frequency", ylab = "Power")
+legend("topleft", legend=prev, col = cols, lwd = 2, title = "Prevalence")
+
+# Negative 
+res2 <- mapply(prob_discovery, list(freq), sign= -1, n_cases=500, n_controls=9500, B=0.2, alpha=5e-8,prev = prev)
+matplot(freq, res2, type = "l", lwd = 2,col = cols, lty =1, xlab = "Frequency", ylab = "Power")
+legend("topleft", legend=prev, col = cols, lwd = 2, title = "Prevalence")
+
+# Power differential 
+res <- res1 - res2
+matplot(freq, res, type = "l", lwd = 2,col = cols, lty =1, xlab = "Frequency", ylab = "Power Differential")
+legend("topleft", legend=prev, col = cols, lwd = 2, title = "Prevalence")
+```
+```{r}
+
+```
+

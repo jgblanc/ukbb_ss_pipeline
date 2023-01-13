@@ -1,0 +1,350 @@
+---
+title: "NCP"
+author: "Alex Stern"
+date: '2022-10-06'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+```
+### Function to calculate Non-Centrality Parameter
+```{r}
+# Calculate mean liability
+mu1 <- B * (1 - p)
+mu2 <- -B * p
+sigma_2 <- 1 - (B^2 * p * (1 - p))
+
+# Calculate conditional probabilities
+p_case_a1 <- 1 - pnorm(t, mean = mu1, sd = sqrt(sigma_2))
+p_case_a2 <- 1 - pnorm(t, mean = mu2, sd = sqrt(sigma_2))
+p_control_a1 <- pnorm(t, mean = mu1, sd = sqrt(sigma_2))
+p_control_a2 <- pnorm(t, mean = mu2, sd = sqrt(sigma_2))
+
+# Compute the allele frequency conditional on case/control
+p_d1 <- (p_case_a1 * p) / (1 - pnorm(t, 0, 1))
+
+p_c1 <- (p_control_a1 * p) / (pnorm(t, 0, 1))
+```
+
+
+```{r}
+q1_obs <- 2 * Nd * p_d1
+q2_obs <- 2 * Nc * p_c1
+q3_obs <- 2 * Nd * (1 - p_d1)
+q4_obs <- 2 * Nc * (1- p_c1)
+
+q1_exp <- (4 *(Nd * p_d1 + Nc * p_c1) * Nd) / (2 * (Nc + Nd))
+q2_exp <- (4 *(Nd * p_d1 + Nc * p_c1) * Nc) / (2 * (Nc + Nd))
+q3_exp <- (4 *(Nd * (1 - p_d1) + Nc * (1 - p_c1)) * Nd) / (2 * (Nc + Nd))
+q4_exp <- (4 *(Nd * (1 - p_d1) + Nc * (1 - p_c1)) * Nc) / (2 * (Nc + Nd))
+```
+
+```{r}
+# Compute the NCP
+NCP = (((q1_obs - q1_exp)^2)/q1_exp) + (((q2_obs - q2_exp)^2)/q2_exp) +         (((q3_obs - q3_exp)^2)/q3_exp) + (((q4_obs - q4_exp)^2)/q4_exp)
+```
+
+```{r}
+calc_NCP <- function(p, Nd, Nc, B, prev) {
+  # Calculate mean liability
+  mu1 <- B * (1 - p)
+  mu2 <- -B * p
+  sigma_2 <- 1 - (B^2 * p * (1 - p))
+  
+  t <- qnorm(1 - prev)
+  
+
+  # Calculate conditional probabilities
+  p_case_a1 <- 1 - pnorm(t, mean = mu1, sd = sqrt(sigma_2))
+  p_case_a2 <- 1 - pnorm(t, mean = mu2, sd = sqrt(sigma_2))
+  p_control_a1 <- pnorm(t, mean = mu1, sd = sqrt(sigma_2))
+  p_control_a2 <- pnorm(t, mean = mu2, sd = sqrt(sigma_2))
+
+  # Compute the allele frequency conditional on case/control
+  p_d1 <- ((p_case_a1 * p) / (1 - pnorm(t, 0, 1)))
+
+  p_c1 <- ((p_control_a1 * p) / pnorm(t, 0, 1))
+  
+  q1_obs <- 2 * Nd * p_d1
+  q2_obs <- 2 * Nc * p_c1
+  q3_obs <- 2 * Nd * (1 - p_d1)
+  q4_obs <- 2 * Nc * (1 - p_c1)
+
+  q1_exp <- (4 *(Nd * p_d1 + Nc * p_c1) * Nd) / (2 * (Nc + Nd))
+  q2_exp <- (4 *(Nd * p_d1 + Nc * p_c1) * Nc) / (2 * (Nc + Nd))
+  q3_exp <- (4 *(Nd * (1 - p_d1) + Nc * (1 - p_c1)) * Nd) / (2 * (Nc + Nd))
+  q4_exp <- (4 *(Nd * (1 - p_d1) + Nc * (1 - p_c1)) * Nc) / (2 * (Nc + Nd))
+  
+  NCP = (((q1_obs - q1_exp)^2)/q1_exp) + (((q2_obs - q2_exp)^2)/q2_exp) + (((q3_obs - q3_exp)^2)/q3_exp) + (((q4_obs - q4_exp)^2)/q4_exp)
+  
+  return(NCP)
+}
+
+calc_NCP(p = 0.1,
+Nd = 1000,
+Nc = 2000,
+B = 1,
+prev = 0.05)
+```
+
+## NCP Dependence on prevelance/threshold
+```{r}
+cols <- c("red", "blue", "green", "purple")
+prev <- seq(0, 1, 0.05)
+freq <- c(0.01, 0.1, 0.5, 0.9)
+res <- mapply(calc_NCP, freq, 1000,1000,1,list(prev))
+matplot(prev, res, type = "l", lwd = 2, col = cols, lty =1, xlab = "Prevalence", ylab = "NCP")
+legend("bottomright", legend=freq, col = cols, lwd = 2, title = "Frequency")
+```
+
+## NCP dependence on number of cases and controls
+```{r}
+cols <- c("red", "blue", "green", "purple")
+pop <- seq(1000, 10000, 1000)
+freq <- c(0.01, 0.1, 0.5, 0.9)
+res <- mapply(calc_NCP, freq, list(pop),10000,1,0.05)
+matplot(pop/10000, res, type = "l", lwd = 2, col = cols, lty =1, xlab = "Nc/Nd", ylab = "NCP")
+legend("bottomright", legend=freq, col = cols, lwd = 2, title = "Frequency")
+```
+
+## NCP dependence on effect size
+```{r}
+cols <- c("red", "blue", "green", "purple")
+es <- seq(0, 1, 0.1)
+freq <- c(0.01, 0.1, 0.5, 0.9)
+res <- mapply(calc_NCP, freq, 1000 ,1000,list(es) ,0.5)
+matplot(es, res, type = "l", lwd = 2, col = cols, lty =1, xlab = "Effect Size", ylab = "NCP")
+legend("bottomright", legend=freq, col = cols, lwd = 2, title = "Frequency")
+```
+```{r}
+cols <- c("green", "blue", "purple")
+freq <- seq(0, 1, 0.001)
+prevs <- c(0.05, 0.5, 0.95)
+plot <- mapply(calc_NCP, list(freq), 1000 ,1000, 1, prevs)
+matplot(freq, plot, type = "l", lwd = 2, lty = 1, xlab = "Frequency", ylab = "NCP", col = cols,)
+abline(v = 0.5, col = 'red')
+abline(v = freq[which.max(mapply(calc_NCP, list(freq), 1000 ,1000, 1, 0.5))], lty = 2, col = "blue")
+abline(v = freq[which.max(mapply(calc_NCP, list(freq), 1000 ,1000, 1, 0.05))], lty = 2, col = "green")
+abline(v = freq[which.max(mapply(calc_NCP, list(freq), 1000 ,1000, 1, 0.95))], lty = 2, col = "purple")
+legend("topright", legend=prevs, col = cols, lwd = 2, title = "Prevalences")
+```
+```{r}
+cols <- c("green", "blue", "purple")
+freq <- seq(0, 1, 0.001)
+cases <- c(1000, 5000, 10000)
+plot <- mapply(calc_NCP, list(freq), cases ,10000, 1, 0.05)
+matplot(freq, plot, type = "l", lwd = 2, lty = 1, xlab = "Frequency", ylab = "NCP", col = cols,)
+abline(v = 0.5, col = 'red')
+legend("topright", legend=cases/10000, col = cols, lwd = 2, title = "Case/Control")
+```
+## Calculating Power
+```{r}
+prev <- 0.05
+N <- 10000
+n_cases <- N * prev
+n_control <- N - n_cases
+ncp <- calc_NCP(0.1, n_cases, n_control, 0.1, prev)
+alpha <- 5e-8
+
+power <- 1 - pchisq(qchisq(1 - alpha, df = 1), df = 1, ncp = ncp)
+```
+
+```{r}
+calc_power <- function(p, N, prev, B, alpha) {
+  
+  # Calculate case and control numbers
+  n_cases <- N * prev
+  n_controls <- N - n_cases
+  
+  # Calculate NCP
+  ncp <- calc_NCP(p, n_cases, n_controls, B, prev)
+  
+  # Calculate power
+  power <- 1 - pchisq(qchisq(1 - alpha, df = 1), df = 1, ncp = ncp)
+  
+  return(power)
+}
+
+calc_power(p = 0.1, N = 10000, prev = 0.05, B = 0.1, alpha = 5e-8)
+```
+
+## Plotting power variation based on frequency and effect size
+```{r}
+cols <- c("red", "orange", "yellow", "green", "blue", "purple")
+freq <- seq(0, 0.5, 0.01)
+eff_sizes <- c(0.1, 0.2, 0.3, 0.4, 0.5)
+plot <- mapply(calc_power, list(freq), N = 10000, 0.05, eff_sizes, 5e-8)
+matplot(freq, plot, type = "l", lwd = 2, col = cols, lty = 1, xlab = "Frequency", ylab = "power")
+legend("bottomright", legend = eff_sizes, col = cols, lwd = 2, title = "Effect Sizes")
+```
+## Plotting power variation based on frequency and prevalence
+```{r}
+cols <- c("red", "orange", "yellow", "green", "blue", "purple")
+freq <- seq(0, 0.5, 0.01)
+prevs <- c(0.05, 0.5, 0.95)
+plot <- mapply(calc_power, list(freq), N = 10000, prev = prevs, B = 0.1, alpha = 5e-8)
+matplot(freq, plot, type = "l", lwd = 2, col = cols, lty = 1, xlab = "Frequency", ylab = "power")
+legend("topleft", legend = prevs, col = cols, lwd = 2, title = "Prevalence")
+```
+
+```{r}
+### Calculate Non-centrality parameter 
+calc_NCP <- function(p, Nd, Nc, B, prev) {
+  
+  # Nd = number of cases
+  # Nc = number of controls 
+  # B = liability scale effect size
+  # prev = prevalence 
+  # p = risk increasing allele freq 
+  
+  # Compute threshold 
+  t <- qnorm(1 - prev)
+  
+  # Compute mean liability 
+  mu_1 <- B * (1 -p)
+  mu_2 <- -B * p
+  sigma_2 <- 1 - (B^2 * p *(1 -p))
+  
+  # Conditional Probabilities 
+  p_case_a1 <- 1 - pnorm(t, mean = mu_1, sd = sqrt(sigma_2))
+  p_case_a2 <- 1 - pnorm(t, mean = mu_2, sd = sqrt(sigma_2))
+  p_control_a1 <- pnorm(t, mean = mu_1, sd = sqrt(sigma_2))
+  p_control_a2 <- pnorm(t, mean = mu_2, sd = sqrt(sigma_2))
+  
+  # Compute allele frequency conditional on status
+  p_d1 <- (p_case_a1 * p) / (1 - pnorm(t, mean = 0, sd = 1))
+  p_c1 <- (p_control_a1 * p) / pnorm(t, mean = 0, sd = 1)
+  
+  # Observed counts
+  q1_o <- 2 * Nd * p_d1
+  q2_o <- 2 * Nc * p_c1
+  q3_o <- 2 * Nd * (1 - p_d1)
+  q4_o <- 2 * Nc * (1 - p_c1)
+  
+  # Expected counts
+  q1_e <- ((2 * (Nd*p_d1 + Nc*p_c1)) * (2*Nd)) / (2* (Nd + Nc))
+  q2_e <- ((2 * (Nd*p_d1 + Nc*p_c1)) * (2*Nc)) / (2* (Nd + Nc))
+  q3_e <- ((2 * (Nd*(1-p_d1) + Nc*(1- p_c1))) * (2*Nd)) / (2* (Nd + Nc))
+  q4_e <- ((2 * (Nd*(1-p_d1) + Nc*(1- p_c1))) * (2*Nc)) / (2* (Nd + Nc))
+  
+  # Compute NCP 
+  NCP <- ((q1_o - q1_e)^2 / q1_e) + ((q2_o - q2_e)^2 / q2_e) + ((q3_o - q3_e)^2 / q3_e) + ((q4_o - q4_e)^2 / q4_e)
+  
+  # Return NCP
+  return(NCP)
+}
+
+
+### Function to calculate power 
+
+calc_power <- function(p, n_cases, n_controls, B, alpha, prev) {
+  
+  # alpha = type 1 error (5e-8 for GWAS)
+  
+  # Calculate ncp 
+  ncp <- calc_NCP(p=p, Nd=n_cases, Nc=n_controls, B=B, prev=prev)
+  
+  # Calculate power 
+  power <- 1- pchisq(qchisq(1- alpha, df =1),df=1, ncp = ncp)
+  
+  return(power)
+}
+
+## Wrapper to match notes 
+
+p_b <- function(x, sign, n_cases, n_controls, B, alpha, prev) {
+  
+  # alpha = type 1 error (5e-8 for GWAS)
+  if (sign == 1) {
+    p <- x
+  } else if (sign == -1)  {
+    p <- 1 - x 
+  } else {
+    stop("Please enter a valid sign")
+  }
+  # Calculate ncp 
+  ncp <- calc_NCP(p=p, Nd=n_cases, Nc=n_controls, B=B, prev=prev)
+  
+  # Calculate power 
+  power <- 1- pchisq(qchisq(1- alpha, df =1),df=1, ncp = ncp)
+  
+  return(power)
+  
+}
+p_b(x = 0.1, sign = 1, n_cases = 500, n_controls = 10000, B=0.1,alpha = 5e-8, prev=0.05)
+p_b(x = 0.1, sign = -1, n_cases = 500, n_controls = 10000, B=0.1,alpha = 5e-8, prev=0.05)
+
+likelihood_sign <- function(x, sign, n_cases, n_controls, B, alpha, prev) {
+  numerator <- p_b(x, sign, n_cases, n_controls, B, alpha, prev)
+  denominator <- (0.5 * p_b(x, sign=-1, n_cases, n_controls, B, alpha, prev)) + (0.5 * p_b(x, sign=1, n_cases, n_controls, B, alpha, prev))
+  result <- numerator/(2*denominator)
+  return(result)
+}
+
+likelihood_sign(x = 0.1, sign = 1, n_cases = 500, n_controls = 10000, B=0.1,alpha = 5e-8, prev=0.5)
+likelihood_sign(x = 0.1, sign = -1, n_cases = 500, n_controls = 10000, B=0.1,alpha = 5e-8, prev=0.5)
+likelihood_sign(x = 0.1, sign = 1, n_cases = 50000, n_controls = 50000, B=0.1,alpha = 5e-8, prev=0.5)
+likelihood_sign(x = 0.1, sign = -1, n_cases = 1000000, n_controls = 100000, B=0.1,alpha = 5e-8, prev=0.5)
+
+```
+
+## Simulation Data
+```{r}
+L <- 1000
+obs_x <- rep(0.1, L)
+prob_sign <- rep(0, L)
+for (i in 1:L) {
+  prob_sign[i] <- p_b(obs_x[i], sign = 1, n_cases = 5000, n_controls = 5000, B=0.1 ,alpha = 5e-8, prev = 0.5)
+}
+vec_obs_b <- rbinom(L, 1, prob_sign)
+vec_obs_b <- 2*(vec_obs_b - 0.5)
+hist(vec_obs_b)
+```
+
+## Find MLE
+```{r}
+compute_prev_lik <- function(obs_x, vec_obs_b, n_cases, n_controls, B, alpha, prev) {
+  vec_lik <- rep(0, L)
+  for (l in 1:L) {
+    vec_lik[l] <- likelihood_sign(obs_x[l], sign = vec_obs_b[l], n_cases, n_controls, B ,alpha, prev)
+  }
+  final_lik <- sum(log(vec_lik))
+  return(final_lik)
+}
+
+grid_vec <- seq(0.01, 0.99, 0.01)
+lik_vec <- rep(0, length(grid_vec))
+for (i in 1:length(grid_vec)) {
+  lik_vec[i] <- compute_prev_lik(obs_x = obs_x, vec_obs_b=vec_obs_b, n_cases = 5000, n_controls = 5000, B=0.1 ,alpha = 5e-8, grid_vec[i])
+}
+compute_prev_lik(obs_x = obs_x, vec_obs_b=vec_obs_b, n_cases = 5000, n_controls = 5000, B=0.1 ,alpha = 5e-8, 0.1)
+compute_prev_lik(obs_x = obs_x, vec_obs_b=vec_obs_b, n_cases = 5000, n_controls = 5000, B=0.1 ,alpha = 5e-8, 0.05)
+
+# compute_prev_lik(obs_x, vec_obs_b=vec_obs_b, n_cases = 500, n_controls = 10000, B=0.2 ,alpha = 5e-8, prev=0.05)
+plot(lik_vec)
+```
+
+## Evolutionary Asymmetry
+```{r}
+gamma <- 40
+p_x <- function(x, gamma) {
+  num <- exp(-gamma*x)
+  denom <- x*(1-x)
+  return(num/denom)
+}
+xs <- seq(0, 1, 0.01)
+plot(xs, p_x(xs, 1))
+plot(xs, p_x(xs, 20))
+```
+
+```{r}
+prob_sign_evo <- function(x, gamma) {
+  result <- 1 / (1 + exp(gamma * (2*x - 1)))
+  return(result)
+}
+plot(xs, prob_sign_evo(xs, 1))
+plot(xs, prob_sign_evo(xs, 20))
+```
+
