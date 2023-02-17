@@ -1,0 +1,71 @@
+---
+title: "Select_Phenotypes"
+author: "Jennifer Blanc"
+date: "2023-01-26"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+rm(list =ls())
+```
+
+# Load all phenotypes
+```{r}
+# Read in all phenotypes 
+phenos <- fread("~/Downloads/phenotypes.both_sexes.tsv")
+
+#t <- phenos %>% filter(phenotype == "20002")
+
+# Select only binary variables
+phenos <- phenos %>% filter(variable_type == "binary")
+
+# Select only phenotypes with non-missing data > 10,000
+phenos <- phenos %>% filter(n_non_missing > 10000)
+```
+
+# Load heritability results
+```{r}
+h2 <- fread("~/Downloads/ukb31063_h2_topline.02Oct2019.tsv.gz")
+
+# Pick binary phenotypes
+h2 <- h2 %>% filter(isBinary == TRUE)
+
+# Pick h2 > 0.01
+h2 <- h2 %>% filter(h2_liability > 0.01 )
+
+# Remove phenotypes with notes
+h2 <- h2 %>% filter(notes == "" )
+
+# Pick high or medium confidence h2
+h2 <- h2 %>% filter(confidence %in% c("high", "medium"))
+
+# Pick significant h2 
+h2 <- h2 %>% filter(h2_sig %in% c("z4", "z7"))
+```
+
+# Load field mappings
+```{r}
+fm <- fread("~/Downloads/UKBB_fieldMappings.csv")
+
+# Subset to Disease
+fm <- fm %>% filter(type %in% c("Disease", "DIsease"))
+```
+
+```{r}
+library(boot)
+
+function_1 <- function(data, i){
+ d2 <- data[i,] 
+ return(cor(d2$X.Drafted, d2$FPTS))
+}
+
+set.seed(1)
+bootstrap_correlation <- boot(mydata,function_1,R=10000)
+```
+
+
+
+
+
+
