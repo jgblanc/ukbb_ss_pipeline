@@ -64,11 +64,11 @@ rule snp_number:
 		codes = "data/ukbb_phenotype_names.tsv"
 	params:
 		maf_t = lambda wildcards: get_params(wildcards.maf),
-		pval_t = get_p_list(PC)
+		pval_t = get_p_list(THRESHOLDS)
 	output:
 		"data/snp_number/{maf}/{id}.numSNP"
 	shell:
-		"Rscript code/get_iaf_weighted.R {wildcards.id} {input.blocks} {input.codes} {params.maf_t} {params.pval_t} {output}"
+		"Rscript code/get_snp_number.R {wildcards.id} {input.blocks} {input.codes} {params.maf_t} {params.pval_t} {output}"
 
 	
 

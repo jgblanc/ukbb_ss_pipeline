@@ -14,10 +14,12 @@ pheno_id <- args[1]
 blocks_file=args[2]
 code_file=args[3]
 maf_t=as.numeric(args[4])
-pval_t=as.numeric(args[5])
+pval_list=args[5]
 output_file=args[6]
+pval_list <- as.numeric(strsplit(pval_list,"-")[[1]])
+pval_list <- 10^(-1 *pval_list)
+print(pval_list)
 print(maf_t)
-print(pval_t)
 print(pheno_id)
 
 # Download summary stats 
@@ -99,7 +101,7 @@ phenotype_name <- as.character(pheno_name_table[1,"phenotype"])
 df_filtered <- df %>% filter(low_confidence_variant == FALSE)
 
 # Remove non-significant variants
-df_sig <- df_filtered %>% filter(pval < pval_t)
+df_sig <- df_filtered %>% filter(pval < 10^-4)
 
 # Separated column 1 into chromosome, base pair, reference allele, and alt. allele
 df_split <- df_sig %>% separate(variant, c("chr", "bp", "ref", "alt"), sep = ":")
@@ -108,8 +110,8 @@ df_split <- df_sig %>% separate(variant, c("chr", "bp", "ref", "alt"), sep = ":"
 df_af_filter <- df_split %>% filter(minor_AF > maf_t) %>% filter(chr!= "X")
 
 if(nrow(df_af_filter) == 0) {
-  df_out <- as.data.frame(matrix(c(NA, NA, NA, NA, NA), nrow = 1))
-  colnames(df_out) <- c("mean_iaf", "lower_ci", "upper_ci", "SNP_number", "phenotype_name")
+  df_out <- as.data.frame(matrix(c(phenotype_name, phenotype_code, rep(NA, length(pval_list))), nrow = 1))
+  colnames(df_out) <- c("phenotype_name", "phenotype_code", paste0("p-", pval_list))
   print("No significant SNPs")
 } else { 
 
@@ -141,46 +143,22 @@ if(nrow(df_af_filter) == 0) {
     group_by(block) %>%
     slice_min(pval, with_ties = F)
   
-  # Find the alternate allele frequency
-  df_alt_freq <- df_minP %>%
-    mutate(alt_AF = case_when(alt == minor_allele ~ minor_AF, alt != minor_allele ~ (1 - minor_AF)))
   
-  # Find the increasing allele frequency
-  df_inc_freq <- df_alt_freq %>%
-    mutate(inc_AF = case_when((beta >= 0) ~ alt_AF, (beta < 0) ~ (1 - alt_AF)))
-  
-  # Record number of SNPs used to calculate average
-  nSNPs <- length(df_inc_freq$inc_AF)
-  
-  # Find average of the increasing allele frequency
-  avg_inc_AF <- mean(df_inc_freq$inc_AF)
-
-  if(nSNPs == 1) {
-    df_out <- as.data.frame(matrix(c(avg_inc_AF, avg_inc_AF, avg_inc_AF, 1, phenotype_name), nrow = 1))
-    colnames(df_out) <- c("mean_iaf", "lower_ci", "upper_ci", "SNP_number", "phenotype_name")
-    print("1 significant SNP")
-  } else {
-  
-    # Boot strap resampling 
-    boot_mean <- function(original_vector, resample_vector) {
-      mean(original_vector[resample_vector])
-    }
-  
-    # R is number of replications
-    mean_results <- boot(df_inc_freq$inc_AF, boot_mean, R = 5000)
-    ci <- boot.ci(boot.out = mean_results, type = "basic")
-  
-    # Create the confidence interval
-    lb <- ci$basic[4]
-    ub <- ci$basic[5]
-  
+    num_sig <- rep(0, length(pval_list))
+    for (i in 1:length(pval_list)){
+      
+      tmp <- df_minP %>% filter(pval<= pval_list[i])
+      num_sig[i] <-nrow(tmp)
+      
+    
     # Create output data for trait
-    df_out <- as.data.frame(matrix(c(avg_inc_AF, lb, ub, nSNPs, phenotype_name), nrow = 1))
-    colnames(df_out) <- c("mean_iaf", "lower_ci", "upper_ci", "SNP_number", "phenotype_name")
+    df_out <- as.data.frame(matrix(c(phenotype_name, phenotype_code, num_sig), nrow = 1))
+    colnames(df_out) <- c("phenotype_name", "phenotype_code", paste0("p-", pval_list))
   }
 }
 
 # Save output
+print(df_out)
 fwrite(df_out, output_file, row.names = F, col.names = T, sep = "\t")
 
 # Delete raw and zipped files 

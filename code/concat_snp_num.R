@@ -1,0 +1,24 @@
+library(dplyr)
+library(data.table)
+
+
+maf <- c("maf_0.01")
+#pval <- c("pval_5e-8")
+names_raw <- list.files("../data/snp_number/maf_0.01/")
+names <- rep(NA, length(names_raw))
+for (i in 1:length(names_raw)) {
+  names[i] <- tools::file_path_sans_ext(names_raw[i])
+}
+print(head(names))
+dat <- expand.grid(names, maf)
+colnames(dat) <- c("filename", "maf")
+
+agg_all_data <- function(dir_path, maf, filename) {
+  
+  df <- fread(paste0(dir_path,"/", maf, "/", filename, ".numSNP"))
+  
+  return(df)
+}
+df <- plyr::mdply(dat, agg_all_data, dir_path = '../data/snp_number' )
+
+fwrite(df, "../output/results/snp_number_0.01.txt", row.names=F,quote=F,sep="\t", col.names = T)
