@@ -52,16 +52,34 @@ fm <- fread("~/Downloads/UKBB_fieldMappings.csv")
 fm <- fm %>% filter(type %in% c("Disease", "DIsease"))
 ```
 
+# Load Significant SNP number 
 ```{r}
-library(boot)
+snp <- fread("../output/results/snp_number_0.01.txt")
+```
 
-function_1 <- function(data, i){
- d2 <- data[i,] 
- return(cor(d2$X.Drafted, d2$FPTS))
+## Get list
+```{r}
+colnames(snp)[1] <- "phenotype"
+df <- inner_join(phenos, snp)
+
+## Stringent p-val threshold at least 10 SNPs
+dfS <- df %>% filter(`p-1e-08` >= 10)
+
+## Leinient p-val threshold at least 100 SNPs
+dfL <- df  %>% filter(`p-1e-05` >= 10)
+
+
+for (i in 1:nrow(dfS)) {
+  filename <- paste0(dfS$phenotype[i], ".gwas.imputed_v3.both_sexes.tsv.bgz")
+  cmd <- paste0("touch ../output/file_names/Stringent/", filename)
+  system(cmd)
 }
 
-set.seed(1)
-bootstrap_correlation <- boot(mydata,function_1,R=10000)
+for (i in 1:nrow(dfL)) {
+  filename <- paste0(dfL$phenotype[i], ".gwas.imputed_v3.both_sexes.tsv.bgz")
+  cmd <- paste0("touch ../output/file_names/Lenient/", filename)
+  system(cmd)
+}
 ```
 
 

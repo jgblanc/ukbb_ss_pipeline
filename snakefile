@@ -1,8 +1,8 @@
 # Pipeline to process GWAS summary statistics
-IDS, = glob_wildcards("output/file_names/all/{id}.gwas.imputed_v3.both_sexes.tsv.bgz")
+IDS, = glob_wildcards("output/file_names/Stringent/{id}.gwas.imputed_v3.both_sexes.tsv.bgz")
 MAF = ["maf_0.01"]
-PVAL = ["pval_1e-5", "pval_5e-8"]
-THRESHOLDS = [4,5,6,7,8]
+PVAL = ["pval_1e-8"]
+#THRESHOLDS = [4,5,6,7,8]
 
 def get_params(x):
 	out = x.split("_")[1]
@@ -18,7 +18,7 @@ def get_p_list(x):
 
 rule all:
 	input:
-		expand("data/snp_number/{maf}/{id}.numSNP", id=IDS, maf=MAF, pval=PVAL)
+		expand("data/snp_number/{maf}/{pval}/{id}.mle", id=IDS, maf=MAF, pval=PVAL)
 
 
 #This rule unzips raw bgz files
@@ -70,6 +70,19 @@ rule snp_number:
 	shell:
 		"Rscript code/get_snp_number.R {wildcards.id} {input.blocks} {input.codes} {params.maf_t} {params.pval_t} {output}"
 
-	
+
+rule get_MLE:
+	input:
+#		ss = "data/unzipped/{id}.gwas.imputed_v3.both_sexes.tsv",
+		blocks = "data/fourier_ls-all_parsed.bed",
+		codes = "data/ukbb_phenotype_names.tsv",
+		phenotypes = "data/phenotypes.both_sexes.tsv"
+	params:
+		maf_t = lambda wildcards: get_params(wildcards.maf),
+		pval_t = lambda wildcards: get_params(wildcards.pval)
+	output:
+		"data/snp_number/{maf}/{pval}/{id}.mle"
+	shell:
+		"Rscript code/get_MLE.R {wildcards.id} {input.blocks} {input.codes} {params.maf_t} {params.pval_t} {output} {input.phenotypes}"	
 
 	
