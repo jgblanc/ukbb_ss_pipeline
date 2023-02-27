@@ -2,7 +2,7 @@
 IDS, = glob_wildcards("output/file_names/Stringent/{id}.gwas.imputed_v3.both_sexes.tsv.bgz")
 MAF = ["maf_0.01"]
 PVAL = ["pval_1e-8"]
-#THRESHOLDS = [4,5,6,7,8]
+THRESHOLDS = [4,5,6,7,8]
 
 def get_params(x):
 	out = x.split("_")[1]
@@ -18,7 +18,7 @@ def get_p_list(x):
 
 rule all:
 	input:
-		expand("data/snp_number/{maf}/{pval}/{id}.mle", id=IDS, maf=MAF, pval=PVAL)
+		expand("data/mle/{maf}/{pval}/{id}.mle", id=IDS, maf=MAF, pval=PVAL)
 
 
 #This rule unzips raw bgz files
@@ -81,7 +81,7 @@ rule get_MLE:
 		maf_t = lambda wildcards: get_params(wildcards.maf),
 		pval_t = lambda wildcards: get_params(wildcards.pval)
 	output:
-		"data/snp_number/{maf}/{pval}/{id}.mle"
+		"data/mle/{maf}/{pval}/{id}.mle"
 	shell:
 		"Rscript code/get_MLE.R {wildcards.id} {input.blocks} {input.codes} {params.maf_t} {params.pval_t} {output} {input.phenotypes}"	
 
